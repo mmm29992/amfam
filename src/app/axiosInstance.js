@@ -1,38 +1,25 @@
-// frontend/axiosInstance.js
+// frontend/axiosInstance.ts
 import axios from "axios";
 
-// Create and export an Axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5001/api", // Your backend URL (adjust if necessary)
+  baseURL: "http://localhost:5001/api", // Change to your deployed URL in prod
+  withCredentials: true, // 🔐 Needed for cookie-based auth
   headers: {
-    "Content-Type": "application/json", // Set the content type to JSON
+    "Content-Type": "application/json",
   },
-  timeout: 5000, // Example timeout value (5 seconds)
+  timeout: 5000,
 });
 
-// Add a request interceptor
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token"); // Get token from localStorage
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`; // Attach token to request headers
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// You can remove the request interceptor entirely
 
-// Add a response interceptor
+// Optional: keep this response interceptor for 401 redirects
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid, redirect to login
       window.location.href = "/login";
     }
-    console.error("Error:", error.response); // Optionally log the error to console
+    console.error("Error:", error.response);
     return Promise.reject(error);
   }
 );

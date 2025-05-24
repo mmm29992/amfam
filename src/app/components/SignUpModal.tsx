@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import axiosInstance from "../axiosInstance"; // Ensure axiosInstance is properly imported
+import axiosInstance from "../axiosInstance";
 
 type ModalProps = {
-  isOpen: boolean; // Indicates whether the modal is open or not
-  onClose: () => void; // Function to close the modal
+  isOpen: boolean;
+  onClose: () => void;
 };
 
 const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
@@ -13,7 +13,6 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     e.stopPropagation();
   };
 
-  // State variables for form inputs
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,41 +20,33 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [userType, setUserType] = useState<"client" | "employee">("client");
   const [error, setError] = useState("");
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    if (!username || !email || !password || !confirmPassword) {
+    if (!username || !email || !password || !confirmPassword || !userType) {
       setError("Please fill in all fields");
       return;
     }
 
-    try {
-      // Send POST request to the backend for user registration
-      const response = await axiosInstance.post("/auth/register", {
-        username,
-        email,
-        password,
-        userType, // Send userType along with other data
-      });
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
-      // Check for successful registration
+    try {
+      const response = await axiosInstance.post(
+        "/auth/register",
+        { username, email, password, userType },
+        { withCredentials: true } // ✅ enables cookie setting
+      );
+
       if (response.status === 201) {
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token); // Store the token in localStorage
-          window.location.href = "/dashboard"; // Redirect to the Dashboard after successful registration
-        } else {
-          setError("Error: No token received");
-        }
+        window.location.href = "/dashboard"; // redirect after success
       } else {
         setError("Error registering user. Please try again.");
       }
     } catch (err) {
+      console.error("Signup error:", err);
       setError("Error registering user. Please try again.");
     }
   };
@@ -63,11 +54,11 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   return (
     <div
       className="fixed inset-0 flex justify-center items-center z-50 backdrop-blur-xs bg-transparent"
-      onClick={onClose} // Close modal when clicking outside of it
+      onClick={onClose}
     >
       <div
         className="bg-white p-8 w-112 rounded-xl shadow-lg relative border border-black"
-        onClick={handleModalClick} // Prevent closing when clicking inside the modal content
+        onClick={handleModalClick}
       >
         <button
           onClick={onClose}
