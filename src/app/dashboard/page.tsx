@@ -1,23 +1,57 @@
 "use client";
-import { useState } from "react";
-import Modal from "./components/Modal"; // Adjust path as needed
 
-export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+import { useEffect, useState } from "react";
+import axiosInstance from "../axiosInstance";
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+// Define expected user type
+type User = {
+  username: string;
+  email: string;
+  userType: "client" | "employee";
+};
 
-  // 🔁 Moved redirect logic here
-  const handleLoginSuccess = () => {
-    setIsModalOpen(false); // Close the modal
-    window.location.href = "/dashboard"; // Redirect to dashboard
+export default function Dashboard() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axiosInstance.get("/auth/me");
+        setUser(response.data.user);
+      } catch (err) {
+        console.error("Failed to fetch user:", err);
+        setError("Failed to fetch user data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      window.location.href = "/";
+    }
+  }, [loading, user]);
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/auth/logout");
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
   };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div className="min-h-screen bg-blue-800">
       <header className="h-[150px] w-full bg-white flex flex-col">
-        {/* Top part of the header */}
         <div className="flex-1 flex items-center justify-between px-6">
           <div className="flex items-center space-x-2">
             <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
@@ -37,10 +71,10 @@ export default function Home() {
               Contact Us
             </button>
             <button
-              onClick={openModal}
+              onClick={handleLogout}
               className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold"
             >
-              Sign In
+              Log Out
             </button>
           </div>
         </div>
@@ -93,12 +127,17 @@ export default function Home() {
         <div className="h-[2px] bg-red-600 w-full"></div>
       </header>
 
-      {/* Modal component */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onLoginSuccess={handleLoginSuccess} // 🔁 NEW PROP
-      />
+      {/* Dashboard content */}
+      <div className="p-8 text-white">
+        <h1 className="text-3xl font-bold mb-4">Welcome to Your Dashboard</h1>
+        {user && (
+          <div>
+            <p className="text-lg">Hello, {user.username}!</p>
+            <p>Email: {user.email}</p>
+            <p>Role: {user.userType}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

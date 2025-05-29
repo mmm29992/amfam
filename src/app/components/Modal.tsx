@@ -1,15 +1,15 @@
+"use client";
 import React, { useState } from "react";
-import axios from "axios"; // Import Axios for HTTP requests
-import LoginForm from "./LoginForm"; // Import the LoginForm component
-import SignUpModal from "./SignUpModal"; // Import SignUpModal
+import axios from "axios";
+import LoginForm from "./LoginForm";
+import SignUpModal from "./SignUpModal";
+import { useRouter } from "next/navigation";
 
-// Define the types for props passed to the Modal component
 type ModalProps = {
-  isOpen: boolean; // Indicates whether the modal is open or not
-  onClose: () => void; // Function to close the modal
+  isOpen: boolean;
+  onClose: () => void;
 };
 
-// UserTypeSelection component to handle Client/Employee selection
 const UserTypeSelection: React.FC<{
   userType: "client" | "employee";
   setUserType: React.Dispatch<React.SetStateAction<"client" | "employee">>;
@@ -39,69 +39,71 @@ const UserTypeSelection: React.FC<{
 );
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
+  const [userType, setUserType] = useState<"client" | "employee">("client");
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const router = useRouter();
+
+  const isValidIdentifier = (value: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return emailRegex.test(value) || usernameRegex.test(value);
+  };
+
   if (!isOpen) return null;
 
   const handleModalClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
 
-  const [userType, setUserType] = useState<"client" | "employee">("client");
-  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false); // State to control Sign Up modal
-  const [email, setEmail] = useState(""); // Email state
-  const [password, setPassword] = useState(""); // Password state
-  const [error, setError] = useState(""); // Error handling state
-
   const closeSignUpModal = () => setIsSignUpModalOpen(false);
   const openSignUpModal = () => setIsSignUpModalOpen(true);
 
-  // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      setError("Please fill out both email and password");
+    if (!identifier || !password) {
+      setError("Please fill out both fields");
+      return;
+    }
+
+    if (!isValidIdentifier(identifier)) {
+      setError("Enter a valid email or username");
       return;
     }
 
     try {
-      // Send POST request with userType included
       const response = await axios.post(
         "http://localhost:5001/api/auth/login",
-        {
-          email,
-          password,
-          userType, // Include userType in the login request
-        }
+        { identifier, password, userType },
+        { withCredentials: true }
       );
 
-      // On successful login, store the JWT token
-      localStorage.setItem("token", response.data.token);
-
-      // Redirect to dashboard or another page after login
-      window.location.href = "/dashboard"; // You can replace this with your redirect logic
+      console.log("Login successful:", response.data);
+      onClose();
+      router.push("/dashboard");
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        console.error(
-          "Login error:",
-          err.response ? err.response.data : err.message
-        );
+        console.error("Login error:", err.response?.data || err.message);
       } else {
         console.error("Login error:", err);
       }
-      setError("Invalid credentials"); // Set error message if login fails
+      setError("Invalid credentials");
     }
   };
 
   return (
     <div
       className="fixed inset-0 flex justify-center items-center z-50 backdrop-blur-xs bg-transparent"
-      onClick={onClose} // Close modal when clicking outside of it
+      onClick={onClose}
     >
       <div
         className="bg-white p-8 w-112 rounded-xl shadow-lg relative"
-        onClick={handleModalClick} // Prevent closing when clicking inside the modal content
+        onClick={handleModalClick}
       >
-        {/* Close button (Red X icon) */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-red-600 text-3xl"
@@ -109,19 +111,16 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           &times;
         </button>
 
-        {/* Modal title */}
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-800">
           Log in to My Account
         </h2>
 
-        {/* User Type Selection: Client or Employee */}
         <UserTypeSelection userType={userType} setUserType={setUserType} />
 
-        {/* Login form */}
         <LoginForm
-          email={email}
+          identifier={identifier}
           password={password}
-          setEmail={setEmail}
+          setIdentifier={setIdentifier}
           setPassword={setPassword}
           handleLogin={handleLogin}
           error={error}
@@ -130,23 +129,15 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         <div className="text-center mt-4">
           <p className="text-gray-400">
             Need to create an account?{" "}
-            <a
-              href="#"
-              className="text-blue-500"
-              onClick={openSignUpModal} // Open Sign Up modal when clicked
-            >
+            <a href="#" className="text-blue-500" onClick={openSignUpModal}>
               Sign up here
             </a>
           </p>
         </div>
       </div>
 
-      {/* Sign Up Modal Component */}
       {isSignUpModalOpen && (
-        <SignUpModal
-          isOpen={isSignUpModalOpen}
-          onClose={closeSignUpModal} // Pass onClose to SignUpModal
-        />
+        <SignUpModal isOpen={isSignUpModalOpen} onClose={closeSignUpModal} />
       )}
     </div>
   );

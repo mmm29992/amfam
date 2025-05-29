@@ -1,18 +1,18 @@
 import React from "react";
 
 type LoginFormProps = {
-  email: string;
+  identifier: string;
   password: string;
-  setEmail: React.Dispatch<React.SetStateAction<string>>;
+  setIdentifier: React.Dispatch<React.SetStateAction<string>>;
   setPassword: React.Dispatch<React.SetStateAction<string>>;
   handleLogin: (e: React.FormEvent) => void;
   error: string;
 };
 
 const LoginForm: React.FC<LoginFormProps> = ({
-  email,
+  identifier,
   password,
-  setEmail,
+  setIdentifier,
   setPassword,
   handleLogin,
   error,
@@ -21,9 +21,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
     <form className="flex flex-col space-y-4" onSubmit={handleLogin}>
       <input
         type="text"
-        placeholder="Email or User ID"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Username or Email"
+        value={identifier}
+        onChange={(e) => setIdentifier(e.target.value)}
         className="px-4 py-2 border rounded-md border-blue-800 placeholder-gray-400 text-gray-600 focus:outline-none focus:border-blue-500"
         required
       />

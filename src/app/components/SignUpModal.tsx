@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axiosInstance from "../axiosInstance";
+import { useRouter } from "next/navigation";
 
 type ModalProps = {
   isOpen: boolean;
@@ -7,6 +8,8 @@ type ModalProps = {
 };
 
 const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
+  const router = useRouter();
+
   if (!isOpen) return null;
 
   const handleModalClick = (e: React.MouseEvent) => {
@@ -22,6 +25,7 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (!username || !email || !password || !confirmPassword || !userType) {
       setError("Please fill in all fields");
@@ -33,21 +37,32 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
       return;
     }
 
+    console.log("Registering user:", { username, email, userType });
+
     try {
       const response = await axiosInstance.post(
         "/auth/register",
         { username, email, password, userType },
-        { withCredentials: true } // ✅ enables cookie setting
+        { withCredentials: true }
       );
 
       if (response.status === 201) {
-        window.location.href = "/dashboard"; // redirect after success
+        onClose(); // ✅ Close the modal
+        router.push("/dashboard"); // ✅ Redirect to dashboard
       } else {
         setError("Error registering user. Please try again.");
       }
-    } catch (err) {
-      console.error("Signup error:", err);
-      setError("Error registering user. Please try again.");
+    } catch (err: any) {
+      if (err.response) {
+        console.error("Signup error:", err.response.data);
+        setError(
+          err.response.data.message ||
+            "Error registering user. Please try again."
+        );
+      } else {
+        console.error("axios error:", err.message);
+        setError("Network error. Check your connection and try again.");
+      }
     }
   };
 
@@ -105,7 +120,6 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
             required
           />
 
-          {/* User Type Selection */}
           <div className="mb-4">
             <label className="text-gray-800 mr-4">Select User Type:</label>
             <div className="flex items-center">
