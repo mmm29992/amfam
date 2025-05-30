@@ -11,7 +11,6 @@ export default function Home() {
   // 🔁 Moved redirect logic here
   const handleLoginSuccess = () => {
     setIsModalOpen(false); // Close the modal
-    window.location.href = "/dashboard"; // Redirect to dashboard
   };
 
   return (

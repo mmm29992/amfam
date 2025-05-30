@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess: () => void;
 };
 
 const UserTypeSelection: React.FC<{
@@ -38,7 +39,7 @@ const UserTypeSelection: React.FC<{
   </div>
 );
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [userType, setUserType] = useState<"client" | "employee">("client");
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [identifier, setIdentifier] = useState("");
@@ -83,8 +84,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
       );
 
       console.log("Login successful:", response.data);
-      onClose();
-      router.push("/dashboard");
+      onLoginSuccess(); // just closes the modal now
+      router.push("/dashboard"); // next.js redirect
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.error("Login error:", err.response?.data || err.message);

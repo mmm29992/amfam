@@ -1,52 +1,55 @@
 "use client";
 
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import axios from "axios";
+import ScriptModal from "../ScriptModal"; // adjust path if needed
 
-type User = {
-  username: string;
-  email: string;
-  userType: "client" | "employee";
-};
+interface Script {
+  _id: string;
+  name: string;
+  english: string;
+  translation: string;
+  createdBy?: { username: string };
+  updatedBy?: { username: string };
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+function formatDate(dateString?: string) {
+  if (!dateString) return "Unknown";
+  return new Date(dateString).toLocaleString();
+}
+
+export default function FullScreenScriptPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const id = searchParams.get("id");
+  const [script, setScript] = useState<Script | null>(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchScript = async () => {
+      if (!id) {
+        setError("No script ID provided.");
+        setLoading(false);
+        return;
+      }
       try {
-        const response = await axiosInstance.get("/auth/me");
-        setUser(response.data.user);
+        const res = await axios.get(`http://localhost:5001/api/scripts/${id}`, {
+          withCredentials: true,
+        });
+        setScript(res.data);
       } catch (err) {
-        console.error("Failed to fetch user:", err);
-        setError("Failed to fetch user data");
+        setError("Failed to load script.");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchUserData();
-  }, []);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      window.location.href = "/";
-    }
-  }, [loading, user]);
-
-  const handleLogout = async () => {
-    try {
-      await axiosInstance.post("/auth/logout");
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
+    fetchScript();
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-blue-800">
@@ -61,7 +64,6 @@ export default function Dashboard() {
               Mauricia Engle
             </button>
           </div>
-
           <div className="flex items-center space-x-4">
             <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
               Find an Agent
@@ -70,16 +72,14 @@ export default function Dashboard() {
               Contact Us
             </button>
             <button
-              onClick={handleLogout}
+              onClick={() => (window.location.href = "/")}
               className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold"
             >
               Log Out
             </button>
           </div>
         </div>
-
         <div className="h-[1px] bg-blue-800 w-full"></div>
-
         <div className="flex-2 flex flex-col justify-center">
           <div className="flex justify-between items-center px-6">
             <div className="flex items-center space-x-4 lg:space-x-8">
@@ -101,7 +101,6 @@ export default function Dashboard() {
                 Resources
               </button>
             </div>
-
             <div className="flex space-x-4 items-center">
               <button className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold">
                 <img
@@ -122,31 +121,73 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
         <div className="h-[2px] bg-red-600 w-full"></div>
       </header>
 
       <div className="p-8 text-white">
-        <h1 className="text-3xl font-bold mb-4">Welcome to Your Dashboard</h1>
-        {user && (
-          <div>
-            <p className="text-lg">Hello, {user.username}!</p>
-            <p>Email: {user.email}</p>
-            <p>Role: {user.userType}</p>
+        {loading ? (
+          <p>Loading...</p>
+        ) : error || !script ? (
+          <p>{error || "Script not found."}</p>
+        ) : (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">{script.name}</h2>
+            <div>
+              <h3 className="font-semibold mb-1">English:</h3>
+              <p className="bg-white text-blue-800 p-4 rounded shadow whitespace-pre-wrap">
+                {script.english}
+              </p>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-1">Translation:</h3>
+              <p className="bg-white text-blue-800 p-4 rounded shadow whitespace-pre-wrap">
+                {script.translation}
+              </p>
+            </div>
+            <div className="text-sm mt-4 space-y-1">
+              <p>
+                <strong>Created By:</strong>{" "}
+                {script.createdBy?.username || "Unknown"}
+              </p>
+              <p>
+                <strong>Created At:</strong> {formatDate(script.createdAt)}
+              </p>
+              <p>
+                <strong>Updated By:</strong>{" "}
+                {script.updatedBy?.username || "Unknown"}
+              </p>
+              <p>
+                <strong>Updated At:</strong> {formatDate(script.updatedAt)}
+              </p>
+            </div>
 
-            {user.userType === "employee" && (
-              <div className="mt-6">
-                <button
-                  onClick={() => (window.location.href = "/scripts")}
-                  className="bg-white text-blue-800 hover:bg-blue-100 px-6 py-3 rounded-md font-extrabold transition"
-                >
-                  View Scripts
-                </button>
-              </div>
-            )}
+            {/* Action Buttons */}
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={() => router.push("/scripts")}
+                className="bg-white text-blue-800 px-4 py-2 rounded-md font-semibold hover:bg-blue-100"
+              >
+                ← Back to Scripts
+              </button>
+              <button
+                onClick={() => setShowModal(true)}
+                className="bg-yellow-400 text-blue-900 px-4 py-2 rounded-md font-semibold hover:bg-yellow-300"
+              >
+                ✏️ Edit Script
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {showModal && script && (
+        <ScriptModal
+          onClose={() => setShowModal(false)}
+          onSuccess={() => window.location.reload()}
+          existingScript={script}
+        />
+      )}
     </div>
   );
 }
