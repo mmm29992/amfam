@@ -5,6 +5,8 @@ const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const scriptsRoutes = require("./routes/scripts");
+const reminderRoutes = require("./routes/reminders");
+
 
 dotenv.config();
 
@@ -26,6 +28,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/scripts", scriptsRoutes);
+app.use("/api/reminders", reminderRoutes);
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)
@@ -36,3 +39,17 @@ mongoose
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+require("./jobs/sendReminders"); // Start the reminder job
+
+// Catch unknown routes
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+// Global error handler (optional)
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ message: "Server error" });
+});
+

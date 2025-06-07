@@ -5,13 +5,14 @@ const router = express.Router();
 
 // Middleware to restrict access to employees only
 const requireEmployee = (req, res, next) => {
-  if (req.user.userType !== "employee") {
+  if (!["employee", "owner"].includes(req.user.userType)) {
     return res
       .status(403)
-      .json({ message: "Access restricted to employees only." });
+      .json({ message: "Access restricted to employees or owner only." });
   }
   next();
 };
+
 
 // GET all scripts
 router.get("/", authenticateToken, requireEmployee, async (req, res) => {

@@ -16,6 +16,8 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     e.stopPropagation();
   };
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,7 +44,7 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     try {
       const response = await axiosInstance.post(
         "/auth/register",
-        { username, email, password, userType },
+        { firstName, lastName, username, email, password, userType },
         { withCredentials: true }
       );
 
@@ -87,6 +89,25 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         </h2>
 
         <form className="flex flex-col space-y-4" onSubmit={handleSubmit}>
+          <div className="flex space-x-4">
+            <input
+              type="text"
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-1/2 px-4 py-2 border rounded-md border-blue-800 placeholder-gray-500 text-gray-600 focus:outline-none focus:border-blue-500"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-1/2 px-4 py-2 border rounded-md border-blue-800 placeholder-gray-500 text-gray-600 focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+
           <input
             type="text"
             placeholder="Username"
@@ -151,11 +172,14 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
           {error && <p className="text-red-600">{error}</p>}
 
           <div className="flex items-center text-gray-400">
-            <input type="checkbox" className="mr-2" required />I agree to the{" "}
-            <a href="#" className="text-blue-500">
-              terms and conditions
-            </a>
-            .
+            <input type="checkbox" className="mr-2" required />
+            <span>
+              I agree to the{" "}
+              <a href="#" className="text-blue-500">
+                terms and conditions
+              </a>
+              .
+            </span>
           </div>
 
           <div className="flex justify-center mt-6">

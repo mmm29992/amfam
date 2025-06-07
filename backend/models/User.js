@@ -2,6 +2,16 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const UserSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   username: {
     type: String,
     required: true,
@@ -10,7 +20,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    match: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/, // Email validation
+    match: /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/,
   },
   password: {
     type: String,
@@ -19,8 +29,8 @@ const UserSchema = new mongoose.Schema({
   userType: {
     type: String,
     required: true,
-    enum: ["client", "employee"], // Only allow 'client' or 'employee'
-    default: "client", // Default to client if not specified
+    enum: ["client", "employee", "owner"],
+    default: "client",
   },
 });
 

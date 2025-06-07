@@ -29,48 +29,12 @@ const ScriptModal: React.FC<ScriptModalProps> = ({
     existingScript?.translation || ""
   );
   const [error, setError] = useState("");
+  
 
-  const translateText = async (text: string, from: string, to: string) => {
-    try {
-      console.log("Sending to LibreTranslate:", text, `(${from} → ${to})`);
-      const res = await fetch("https://translate.argosopentech.com/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          q: text,
-          source: from,
-          target: to,
-          format: "text",
-        }),
-      });
-      const data = await res.json();
-      console.log("Received from LibreTranslate:", data);
-      return data.translatedText;
-    } catch (err) {
-      console.error("Translation error:", err);
-      return "";
-    }
-  };
+  
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (!existingScript && english) {
-        const translated = await translateText(english, "en", "es");
-        setTranslation(translated);
-      }
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [english]);
+  
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      if (!existingScript && translation) {
-        const backTranslated = await translateText(translation, "es", "en");
-        setEnglish(backTranslated);
-      }
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [translation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,7 +104,7 @@ const ScriptModal: React.FC<ScriptModalProps> = ({
             required
           />
           <textarea
-            placeholder="Translated Text"
+            placeholder="Spanish Text"
             value={translation}
             onChange={(e) => setTranslation(e.target.value)}
             className="px-4 py-2 border rounded-md border-blue-800 placeholder-gray-500 text-gray-600 focus:outline-none focus:border-blue-500"
