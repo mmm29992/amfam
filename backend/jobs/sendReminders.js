@@ -1,16 +1,7 @@
 const cron = require("node-cron");
-const nodemailer = require("nodemailer");
+const transporter = require("../utils/emailTransporter"); // use the shared transporter
 const Reminder = require("../models/Reminder");
 require("dotenv").config();
-
-// Email setup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
 
 // Runs every minute
 cron.schedule("* * * * *", async () => {
@@ -25,7 +16,6 @@ cron.schedule("* * * * *", async () => {
     });
 
     for (const reminder of dueReminders) {
-      // Send email
       if (reminder.sendEmail && reminder.targetEmail) {
         try {
           await transporter.sendMail({
@@ -40,7 +30,6 @@ cron.schedule("* * * * *", async () => {
         }
       }
 
-      // Mark reminder as sent
       reminder.sent = true;
       reminder.sentAt = now;
       reminder.emailStatus = "sent";

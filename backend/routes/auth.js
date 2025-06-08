@@ -5,6 +5,8 @@ const User = require("../models/User");
 const OwnerCode = require("../models/OwnerCode");
 const authenticateToken = require("../middleware/authMiddleware");
 const EmployeeCode = require("../models/EmployeeCode");
+const VerificationCode = require("../models/VerificationCode");
+const nodemailer = require("nodemailer");
 
 const router = express.Router();
 
@@ -78,9 +80,7 @@ router.post("/register", async (req, res) => {
         Math.random().toString(36).substring(2, 8).toUpperCase();
       const newCode = generateCode();
       await EmployeeCode.create({ code: newCode });
-
     }
-    
 
     const emailExists = await User.findOne({ email });
     if (emailExists)
@@ -368,7 +368,7 @@ router.post("/set-employee-code", authenticateToken, async (req, res) => {
   await EmployeeCode.create({ code: newCode });
 
   res.status(200).json({ message: "Employee registration code created." });
-}); 
+});
 
 // Get current employee registration code (only for owners)
 router.get("/get-employee-code", authenticateToken, async (req, res) => {
@@ -404,6 +404,172 @@ router.delete("/delete-employee-code", authenticateToken, async (req, res) => {
   }
 });
 
+router.post("/start-registration", async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+    userType,
+    employeeAccessCode,
+  } = req.body;
 
+  if (
+    !firstName ||
+    !lastName ||
+    !username ||
+    !email ||
+    !password ||
+    !userType
+  ) {
+    return res.status(400).json({ message: "All fields required" });
+  }
+
+  if (userType === "employee") {
+    if (!employeeAccessCode) {
+      return res
+        .status(400)
+        .json({ message: "Employee access code required." });
+    }
+
+    const latestCode = await EmployeeCode.findOne().sort({ createdAt: -1 });
+
+    if (!latestCode || employeeAccessCode.trim() !== latestCode.code.trim()) {
+      return res
+        .status(403)
+        .json({ message: "Invalid or expired employee code." });
+    }
+    if (!latestCode || employeeAccessCode.trim() !== latestCode.code.trim()) {
+      console.warn(
+        `❌ Invalid employee access code entered: ${employeeAccessCode}`
+      );
+      return res
+        .status(403)
+        .json({ message: "Invalid or expired employee code." });
+    }
+  }
+
+  const existingCode = await VerificationCode.findOne({ email });
+  const now = new Date();
+
+  // ⏱️ Cooldown: 60 seconds between code requests
+  if (existingCode && existingCode.expiresAt > now) {
+    const secondsRemaining = Math.ceil((existingCode.expiresAt - now) / 1000);
+    if (secondsRemaining > 540) {
+      // less than 60 seconds since last request
+      return res.status(429).json({
+        message: "Please wait a moment before requesting a new code.",
+      });
+    }
+  }
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
+
+  await VerificationCode.findOneAndUpdate(
+    { email },
+    { code, expiresAt },
+    { upsert: true, new: true }
+  );
+
+  const transporter = require("../utils/emailTransporter");
+
+  await transporter.sendMail({
+    from: `"Verify your account" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Your Verification Code",
+    text: `Your verification code is: ${code}`,
+  });
+  console.log(`✅ Verification code sent to ${email}`);
+
+  res.status(200).json({ message: "Verification code sent to email." });
+});
+
+router.post("/verify-email-code", async (req, res) => {
+  const {
+    email,
+    code,
+    firstName,
+    lastName,
+    username,
+    password,
+    userType,
+    employeeAccessCode: employeeCode, // aliasing for clarity
+  } = req.body;
+
+  const existing = await VerificationCode.findOne({ email });
+  if (!existing || existing.code !== code) {
+    console.warn(`❌ Invalid verification attempt for email: ${email}`);
+    return res
+      .status(400)
+      .json({ message: "Invalid or expired verification code." });
+  }
+
+  if (await User.findOne({ email })) {
+    return res.status(400).json({ message: "Email already registered." });
+  }
+
+  if (await User.findOne({ username })) {
+    return res.status(400).json({ message: "Username already taken." });
+  }
+
+  if (userType === "employee") {
+    const latestCode = await EmployeeCode.findOne().sort({ createdAt: -1 });
+    if (
+      !employeeCode ||
+      !latestCode ||
+      employeeCode.trim() !== latestCode.code.trim()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Invalid employee registration code." });
+    }
+    await EmployeeCode.deleteMany();
+    await EmployeeCode.create({
+      code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+    });
+  }
+
+  const hashedPassword = await bcrypt.hash(password.trim(), 10);
+  const user = new User({
+    firstName,
+    lastName,
+    username,
+    email,
+    password: hashedPassword,
+    userType,
+  });
+
+  console.log(`✅ User ${email} verified and registered as ${userType}`);
+  await user.save();
+  await VerificationCode.deleteOne({ email });
+
+  sendTokenCookie(res, user);
+
+  res.status(201).json({
+    message: "User created and verified",
+    user: { firstName, lastName, username, email, userType },
+  });
+});
+
+router.post("/validate-employee-code", async (req, res) => {
+  const { code } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ message: "Access code is required." });
+  }
+
+  const latest = await EmployeeCode.findOne().sort({ createdAt: -1 });
+
+  if (!latest || code.trim() !== latest.code.trim()) {
+    return res
+      .status(403)
+      .json({ message: "Invalid or expired employee code." });
+  }
+
+  res.status(200).json({ message: "Access code is valid." });
+  console.log(`✅ Employee access code validated: ${code}`);
+});
 
 module.exports = router;
