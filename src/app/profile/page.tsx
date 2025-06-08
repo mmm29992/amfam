@@ -5,6 +5,7 @@ import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import DynamicHeader from "../components/Header/DynamicHeader"; // Adjust the path if needed
 
+
 export default function ProfilePage() {
   const [user, setUser] = useState<{
     firstName: string;
@@ -40,6 +41,10 @@ export default function ProfilePage() {
   const [autoGenerate, setAutoGenerate] = useState(false);
   const [codeMessage, setCodeMessage] = useState("");
   const [codeError, setCodeError] = useState("");
+  const [employeeCode, setEmployeeCode] = useState("");
+  const [employeeCodeError, setEmployeeCodeError] = useState("");
+  const [copySuccess, setCopySuccess] = useState(false);
+
 
   const handleUpdateCode = async () => {
     setCodeError("");
@@ -47,12 +52,11 @@ export default function ProfilePage() {
 
     const finalCode = newCode.trim();
 
-
     if (!oldCode || !finalCode) {
       setCodeError("Old and new codes are required.");
       return;
     }
-    
+
     try {
       const res = await axios.post(
         "http://localhost:5001/api/auth/update-owner-code",
@@ -75,7 +79,6 @@ export default function ProfilePage() {
       );
     }
   };
-  
 
   const handleOwnerCodeUpdate = async () => {
     setOwnerCodeSuccess("");
@@ -96,7 +99,6 @@ export default function ProfilePage() {
       setOwnerCodeError("Failed to update owner code.");
     }
   };
-
 
   const handleDeleteAccount = async () => {
     setDeleteError("");
@@ -150,6 +152,24 @@ export default function ProfilePage() {
 
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    const fetchEmployeeCode = async () => {
+      try {
+        const res = await axios.get(
+          "http://localhost:5001/api/auth/get-employee-code",
+          { withCredentials: true }
+        );
+        setEmployeeCode(res.data.code);
+      } catch (err) {
+        setEmployeeCodeError("No active employee code or failed to load.");
+      }
+    };
+
+    if (user?.userType === "owner") {
+      fetchEmployeeCode();
+    }
+  }, [user]);
 
   const handlePasswordChange = async () => {
     setPasswordError("");
@@ -373,50 +393,113 @@ export default function ProfilePage() {
         )}
 
         {user?.userType === "owner" && (
-          <div className="bg-white text-blue-800 p-6 rounded-md shadow-md w-full max-w-6xl mt-6">
-            <h2 className="text-xl font-bold mb-2">Update Verification Code</h2>
-            <div className="space-y-3">
-              <input
-                type="password"
-                placeholder="Old Verification Code"
-                className="w-full px-3 py-2 border rounded"
-                value={oldCode}
-                onChange={(e) => setOldCode(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="New Verification Code"
-                className="w-full px-3 py-2 border rounded"
-                value={newCode}
-                onChange={(e) => setNewCode(e.target.value)}
-              />
-
-              <div className="flex gap-3 flex-wrap">
-                <button
-                  onClick={handleUpdateCode}
-                  disabled={!oldCode.trim() || !newCode.trim()}
-                  className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                >
-                  Update Code
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const random = Math.random()
-                      .toString(36)
-                      .substring(2, 8)
-                      .toUpperCase();
-                    setNewCode(random);
-                  }}
-                  className="bg-gray-300 text-blue-800 px-4 py-2 rounded hover:bg-gray-400"
-                >
-                  Generate Random Code
-                </button>
+          <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl mt-6">
+            {/* Update Verification Code */}
+            <div className="bg-white text-blue-800 p-6 rounded-md shadow-md w-full lg:w-1/2">
+              <h2 className="text-xl font-bold mb-2">
+                Update Verification Code
+              </h2>
+              <div className="space-y-3">
+                <input
+                  type="password"
+                  placeholder="Old Verification Code"
+                  className="w-full px-3 py-2 border rounded"
+                  value={oldCode}
+                  onChange={(e) => setOldCode(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder="New Verification Code"
+                  className="w-full px-3 py-2 border rounded"
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value)}
+                />
+                <div className="flex gap-3 flex-wrap">
+                  <button
+                    onClick={handleUpdateCode}
+                    disabled={!oldCode.trim() || !newCode.trim()}
+                    className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Update Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const random = Math.random()
+                        .toString(36)
+                        .substring(2, 8)
+                        .toUpperCase();
+                      setNewCode(random);
+                    }}
+                    className="bg-gray-300 text-blue-800 px-4 py-2 rounded hover:bg-gray-400"
+                  >
+                    Generate Random Code
+                  </button>
+                </div>
+                {codeError && (
+                  <p className="text-red-600 text-sm">{codeError}</p>
+                )}
+                {codeMessage && (
+                  <p className="text-green-600 text-sm">{codeMessage}</p>
+                )}
               </div>
+            </div>
 
-              {codeError && <p className="text-red-600 text-sm">{codeError}</p>}
-              {codeMessage && (
-                <p className="text-green-600 text-sm">{codeMessage}</p>
+            {/* Current Employee Registration Code */}
+            <div className="bg-white text-blue-800 p-6 rounded-md shadow-md w-full lg:w-1/2">
+              <h2 className="text-xl font-bold mb-2">
+                Current Employee Registration Code
+              </h2>
+
+              {employeeCode ? (
+                <div>
+                  <p className="bg-gray-100 text-blue-900 p-3 rounded font-mono text-lg inline-block">
+                    {employeeCode}
+                  </p>
+                  <div className="flex gap-3 mt-2 flex-wrap items-center">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(employeeCode);
+                        setCopySuccess(true);
+                        setTimeout(() => setCopySuccess(false), 1000);
+                      }}
+                      className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                      Copy Code
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const random = Math.random()
+                          .toString(36)
+                          .substring(2, 8)
+                          .toUpperCase();
+                        try {
+                          await axios.post(
+                            "http://localhost:5001/api/auth/set-employee-code",
+                            { newCode: random },
+                            { withCredentials: true }
+                          );
+                          setEmployeeCode(random);
+                        } catch (err) {
+                          setEmployeeCodeError("Failed to regenerate code.");
+                          setEmployeeCode("");
+                        }
+                      }}
+                      className="bg-gray-300 text-blue-800 px-4 py-2 rounded hover:bg-gray-400"
+                    >
+                      Regenerate Code
+                    </button>
+                    <p
+                      className={`text-green-600 text-sm transition-opacity duration-300 ${
+                        copySuccess ? "opacity-100" : "opacity-0"
+                      }`}
+                    >
+                      Copied to clipboard!
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-red-600">{employeeCodeError}</p>
               )}
             </div>
           </div>

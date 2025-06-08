@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const OwnerCode = require("../models/OwnerCode");
 const authenticateToken = require("../middleware/authMiddleware");
+const EmployeeCode = require("../models/EmployeeCode");
 
 const router = express.Router();
 
@@ -27,7 +28,15 @@ const sendTokenCookie = (res, user) => {
 
 // Register
 router.post("/register", async (req, res) => {
-  const { firstName, lastName, username, email, password, userType } = req.body;
+  const {
+    firstName,
+    lastName,
+    username,
+    email,
+    password,
+    userType,
+    employeeCode,
+  } = req.body;
   console.log("🚨 Register endpoint hit:", req.body);
 
   try {
@@ -51,6 +60,27 @@ router.post("/register", async (req, res) => {
     if (!["client", "employee", "owner"].includes(userType)) {
       return res.status(400).json({ message: "Invalid user type." });
     }
+
+    if (userType === "employee") {
+      const latestCode = await EmployeeCode.findOne().sort({ createdAt: -1 });
+
+      if (!latestCode || employeeCode.trim() !== latestCode.code.trim()) {
+        return res
+          .status(403)
+          .json({ message: "Invalid or expired employee registration code." });
+      }
+
+      // Delete used code
+      await EmployeeCode.deleteMany();
+
+      // Generate a new one-time code
+      const generateCode = () =>
+        Math.random().toString(36).substring(2, 8).toUpperCase();
+      const newCode = generateCode();
+      await EmployeeCode.create({ code: newCode });
+
+    }
+    
 
     const emailExists = await User.findOne({ email });
     if (emailExists)
@@ -317,5 +347,48 @@ router.post("/delete-account", authenticateToken, async (req, res) => {
     return res.status(500).json({ message: "Server error." });
   }
 });
+
+// Set employee registration code (only owner can call this)
+router.post("/set-employee-code", authenticateToken, async (req, res) => {
+  if (req.user.userType !== "owner") {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  const { newCode } = req.body;
+  if (!newCode) return res.status(400).json({ message: "Code is required." });
+
+  // 🔐 Prevent overwrite if a code already exists
+  const existing = await EmployeeCode.findOne();
+  if (existing) {
+    return res
+      .status(400)
+      .json({ message: "A code already exists. Wait for it to be used." });
+  }
+
+  await EmployeeCode.create({ code: newCode });
+
+  res.status(200).json({ message: "Employee registration code created." });
+}); 
+
+// Get current employee registration code (only for owners)
+router.get("/get-employee-code", authenticateToken, async (req, res) => {
+  if (req.user.userType !== "owner") {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  try {
+    const codeDoc = await EmployeeCode.findOne().sort({ createdAt: -1 });
+    if (!codeDoc) {
+      return res.status(404).json({ message: "No code set yet." });
+    }
+
+    res.status(200).json({ code: codeDoc.code });
+  } catch (err) {
+    console.error("Error fetching employee code:", err);
+    res.status(500).json({ message: "Failed to fetch code." });
+  }
+});
+
+
 
 module.exports = router;
