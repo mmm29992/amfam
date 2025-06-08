@@ -389,6 +389,21 @@ router.get("/get-employee-code", authenticateToken, async (req, res) => {
   }
 });
 
+// Delete employee code (only owner)
+router.delete("/delete-employee-code", authenticateToken, async (req, res) => {
+  if (req.user.userType !== "owner") {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
+
+  try {
+    await EmployeeCode.deleteMany(); // Clears all existing codes
+    res.status(200).json({ message: "Employee code deleted." });
+  } catch (err) {
+    console.error("Error deleting employee code:", err);
+    res.status(500).json({ message: "Failed to delete employee code." });
+  }
+});
+
 
 
 module.exports = router;

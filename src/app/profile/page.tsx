@@ -5,9 +5,9 @@ import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import DynamicHeader from "../components/Header/DynamicHeader"; // Adjust the path if needed
 
-
 export default function ProfilePage() {
   const [user, setUser] = useState<{
+    _id: string;
     firstName: string;
     lastName: string;
     username: string;
@@ -44,7 +44,9 @@ export default function ProfilePage() {
   const [employeeCode, setEmployeeCode] = useState("");
   const [employeeCodeError, setEmployeeCodeError] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
-
+  const [verifyInput, setVerifyInput] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
 
   const handleUpdateCode = async () => {
     setCodeError("");
@@ -448,58 +450,114 @@ export default function ProfilePage() {
             {/* Current Employee Registration Code */}
             <div className="bg-white text-blue-800 p-6 rounded-md shadow-md w-full lg:w-1/2">
               <h2 className="text-xl font-bold mb-2">
-                Current Employee Registration Code
+                Verify to View Employee Registration Code
               </h2>
 
-              {employeeCode ? (
-                <div>
-                  <p className="bg-gray-100 text-blue-900 p-3 rounded font-mono text-lg inline-block">
-                    {employeeCode}
-                  </p>
-                  <div className="flex gap-3 mt-2 flex-wrap items-center">
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(employeeCode);
-                        setCopySuccess(true);
-                        setTimeout(() => setCopySuccess(false), 1000);
-                      }}
-                      className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      Copy Code
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const random = Math.random()
-                          .toString(36)
-                          .substring(2, 8)
-                          .toUpperCase();
-                        try {
-                          await axios.post(
-                            "http://localhost:5001/api/auth/set-employee-code",
-                            { newCode: random },
-                            { withCredentials: true }
-                          );
-                          setEmployeeCode(random);
-                        } catch (err) {
-                          setEmployeeCodeError("Failed to regenerate code.");
-                          setEmployeeCode("");
-                        }
-                      }}
-                      className="bg-gray-300 text-blue-800 px-4 py-2 rounded hover:bg-gray-400"
-                    >
-                      Regenerate Code
-                    </button>
-                    <p
-                      className={`text-green-600 text-sm transition-opacity duration-300 ${
-                        copySuccess ? "opacity-100" : "opacity-0"
-                      }`}
-                    >
-                      Copied to clipboard!
+              <input
+                type="password"
+                placeholder="Enter Owner Verification Code"
+                className="w-full px-3 py-2 border rounded mb-2"
+                value={verifyInput}
+                onChange={(e) => setVerifyInput(e.target.value)}
+              />
+              <button
+                onClick={async () => {
+                  setVerifyError("");
+                  try {
+                    const res = await axios.post(
+                      "http://localhost:5001/api/auth/verify-owner-code",
+                      {
+                        userId: user?._id,
+                        code: verifyInput,
+                      },
+                      { withCredentials: true }
+                    );
+                    setIsVerified(true);
+                  } catch (err) {
+                    setVerifyError("Invalid verification code.");
+                  }
+                }}
+                className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Verify
+              </button>
+              {verifyError && (
+                <p className="text-red-600 text-sm">{verifyError}</p>
+              )}
+
+              {isVerified ? (
+                employeeCode ? (
+                  <div>
+                    <p className="bg-gray-100 text-blue-900 p-3 rounded font-mono text-lg inline-block">
+                      {employeeCode}
                     </p>
+                    <div className="flex gap-3 mt-2 flex-wrap items-center">
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(employeeCode);
+                          setCopySuccess(true);
+                          setTimeout(() => setCopySuccess(false), 1000);
+                        }}
+                        className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-700"
+                      >
+                        Copy Code
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const random = Math.random()
+                            .toString(36)
+                            .substring(2, 8)
+                            .toUpperCase();
+
+                          try {
+                            // Delete the old code first
+                            await axios.delete(
+                              "http://localhost:5001/api/auth/delete-employee-code",
+                              {
+                                withCredentials: true,
+                              }
+                            );
+
+                            // Then create a new one
+                            await axios.post(
+                              "http://localhost:5001/api/auth/set-employee-code",
+                              { newCode: random },
+                              { withCredentials: true }
+                            );
+
+                            setEmployeeCode(random);
+                          } catch (err) {
+                            setEmployeeCodeError("Failed to regenerate code.");
+                            setEmployeeCode("");
+                          }
+                        }}
+                        disabled={!isVerified}
+                        className={`${
+                          isVerified
+                            ? "bg-gray-300 hover:bg-gray-400"
+                            : "bg-gray-200 cursor-not-allowed opacity-50"
+                        } text-blue-800 px-4 py-2 rounded`}
+                      >
+                        Regenerate Code
+                      </button>
+
+                      <p
+                        className={`text-green-600 text-sm transition-opacity duration-300 ${
+                          copySuccess ? "opacity-100" : "opacity-0"
+                        }`}
+                      >
+                        Copied to clipboard!
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-red-600">{employeeCodeError}</p>
+                )
               ) : (
-                <p className="text-red-600">{employeeCodeError}</p>
+                <p className="text-sm text-blue-700 mt-2">
+                  Please verify using your code to access the employee
+                  registration code.
+                </p>
               )}
             </div>
           </div>
