@@ -11,7 +11,7 @@ const ReminderSchema = new Schema(
 
     userType: {
       type: String,
-      enum: ["employee", "client"],
+      enum: ["client", "employee", "owner"],
       required: true,
     },
 

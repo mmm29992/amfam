@@ -73,6 +73,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 
     const reminders = await Reminder.find(query)
       .populate("creatorId", "username firstName lastName")
+      .populate("updatedBy", "username firstName lastName")
       .sort({ scheduledTime: 1 });
 
     res.status(200).json(reminders);

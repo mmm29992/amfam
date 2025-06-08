@@ -70,6 +70,8 @@ export default function ReminderModal({
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
   const [targetOption, setTargetOption] = useState<"self" | "client">("self");
+  const isPastDue = new Date(formState.scheduledTime) < new Date();
+
 
   useEffect(() => {
     if (reminder) {
@@ -90,11 +92,12 @@ export default function ReminderModal({
         _id: "",
         title: "",
         message: "",
-        scheduledTime: new Date().toISOString(),
+        scheduledTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         emailSubject: "",
         emailBody: "",
         targetEmail: "",
       });
+      
       if (userType === "client") setTargetOption("self");
     }
   }, [reminder]);
@@ -224,7 +227,7 @@ export default function ReminderModal({
               </p>
               <hr className="my-2" />
               <label className="block font-semibold mb-1">Subject:</label>
-              {isEditing || isCreating ? (
+              {(isEditing || isCreating) && !isPastDue ? (
                 <input
                   type="text"
                   name="emailSubject"
@@ -238,7 +241,7 @@ export default function ReminderModal({
                 </div>
               )}
               <label className="block font-semibold mb-1">Body:</label>
-              {isEditing || isCreating ? (
+              {(isEditing || isCreating) && !isPastDue ? (
                 <textarea
                   name="emailBody"
                   value={formState.emailBody}
@@ -274,7 +277,7 @@ export default function ReminderModal({
               )}
               <div>
                 <label className="block font-semibold">Title:</label>
-                {isEditing || isCreating ? (
+                {(isEditing || isCreating) && !isPastDue ? (
                   <input
                     type="text"
                     name="title"
@@ -291,7 +294,7 @@ export default function ReminderModal({
 
               <div>
                 <label className="block font-semibold">Message:</label>
-                {isEditing || isCreating ? (
+                {(isEditing || isCreating) && !isPastDue ? (
                   <textarea
                     name="message"
                     value={formState.message}
@@ -307,7 +310,7 @@ export default function ReminderModal({
 
               <div>
                 <label className="block font-semibold">Scheduled Time:</label>
-                {isEditing || isCreating ? (
+                {(isEditing || isCreating) && !isPastDue ? (
                   <input
                     type="datetime-local"
                     name="scheduledTime"
@@ -359,7 +362,7 @@ export default function ReminderModal({
 
           {/* Buttons */}
           <div className="mt-6 flex justify-end gap-4">
-            {isEditing || isCreating ? (
+            {(isEditing || isCreating) && !isPastDue ? (
               <>
                 {!isCreating && (
                   <button
@@ -377,12 +380,14 @@ export default function ReminderModal({
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-              >
-                Edit
-              </button>
+              !isPastDue && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                >
+                  Edit
+                </button>
+              )
             )}
           </div>
         </div>
