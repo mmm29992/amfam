@@ -46,9 +46,13 @@ export default function EmployeeHeader() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-            Find an Agent
+          <button
+            onClick={() => router.push("/profile")}
+            className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+          >
+            My Profile
           </button>
+
           <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
             Contact Us
           </button>
@@ -84,10 +88,10 @@ export default function EmployeeHeader() {
               View Scripts
             </button>
             <button
-              onClick={() => router.push("/profile")}
+              onClick={() => router.push("/quotes")}
               className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
             >
-              My Profile
+              Quotes
             </button>
           </div>
 

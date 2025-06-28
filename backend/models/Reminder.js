@@ -7,11 +7,38 @@ const ReminderSchema = new Schema(
     message: { type: String, required: true },
     scheduledTime: { type: Date, required: true },
     creatorId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    updatedBy: { type: Schema.Types.ObjectId, ref: "User" }, // ✅ Tracks last editor
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
 
     userType: {
       type: String,
       enum: ["client", "employee", "owner"],
+      required: true,
+    },
+
+    // Category and Subcategory Labels
+    category: {
+      type: String,
+      enum: [
+        "Quote Follow Up",
+        "Life",
+        "Commercial",
+        "PL Home",
+        "PL Auto",
+        "PL Renters",
+      ],
+      required: true,
+    },
+    subcategory: {
+      type: String,
+      enum: [
+        "Quotes Follow Up",
+        "No Pay",
+        "Cancel Status",
+        "Cancel",
+        "No Renewal",
+        "Discount Remove",
+        "Documents Needed",
+      ],
       required: true,
     },
 
@@ -22,7 +49,7 @@ const ReminderSchema = new Schema(
     emailBody: { type: String },
 
     // Flags
-    forClient: { type: Boolean, default: false }, // ✅ NEW: Used to identify client-directed reminders
+    forClient: { type: Boolean, default: false },
     sent: { type: Boolean, default: false },
     sentAt: { type: Date },
     emailStatus: {
@@ -30,9 +57,9 @@ const ReminderSchema = new Schema(
       enum: ["queued", "sent", "failed"],
       default: "queued",
     },
-    deleted: { type: Boolean, default: false }, // ✅ Soft delete
+    deleted: { type: Boolean, default: false },
   },
-  { timestamps: true } // ✅ createdAt and updatedAt
+  { timestamps: true }
 );
 
 module.exports =

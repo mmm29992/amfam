@@ -6,6 +6,10 @@ const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const scriptsRoutes = require("./routes/scripts");
 const reminderRoutes = require("./routes/reminders");
+const checklistRoutes = require("./routes/checklist");
+const quoteRoutes = require("./routes/quotes");
+
+
 
 
 dotenv.config();
@@ -29,6 +33,9 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/scripts", scriptsRoutes);
 app.use("/api/reminders", reminderRoutes);
+app.use("/api/checklist", checklistRoutes);
+app.use("/api/quotes", quoteRoutes); // ← ✅ here
+
 // MongoDB connection
 mongoose
   .connect(process.env.MONGO_URI)

@@ -572,4 +572,19 @@ router.post("/validate-employee-code", async (req, res) => {
   console.log(`✅ Employee access code validated: ${code}`);
 });
 
+
+// 👇 Add this route
+router.get("/clients", authenticateToken, async (req, res) => {
+  try {
+    const clients = await User.find({ userType: "client" }).select(
+      "firstName lastName email _id"
+    );
+    res.json(clients);
+  } catch (err) {
+    console.error("Failed to get clients:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 module.exports = router;

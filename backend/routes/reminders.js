@@ -16,7 +16,10 @@ router.post("/", authenticateToken, async (req, res) => {
     emailSubject,
     emailBody,
     forClient = false,
+    category, // ✅ Add this
+    subcategory, // ✅ And this
   } = req.body;
+  
 
   if (!title || !message || !scheduledTime) {
     return res.status(400).json({
@@ -43,10 +46,13 @@ router.post("/", authenticateToken, async (req, res) => {
       targetEmail: sendEmail ? targetEmail : undefined,
       emailSubject: sendEmail ? emailSubject : undefined,
       emailBody: sendEmail ? emailBody : undefined,
+      category, // ✅ Add this
+      subcategory, // ✅ And this
       forClient,
       sent: false,
       deleted: false,
     });
+    
 
     res.status(201).json(newReminder);
   } catch (err) {

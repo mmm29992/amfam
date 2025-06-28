@@ -2,30 +2,8 @@
 
 import { useEffect, useState } from "react";
 import axiosInstance from "../axiosInstance";
+import { Reminder } from "@/types/reminder";
 
-interface Reminder {
-  _id: string;
-  title: string;
-  message: string;
-  scheduledTime: string;
-  emailSubject?: string;
-  emailBody?: string;
-  targetEmail?: string;
-  creatorId?: {
-    _id: string;
-    firstName?: string;
-    lastName?: string;
-    username?: string;
-  };
-  updatedBy?: {
-    _id: string;
-    firstName?: string;
-    lastName?: string;
-    username?: string;
-  };
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 interface ReminderModalProps {
   reminder: Reminder | null;
@@ -65,7 +43,10 @@ export default function ReminderModal({
     emailSubject: "",
     emailBody: "",
     targetEmail: "",
+    category: "",
+    subcategory: "",
   });
+  
 
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
@@ -96,6 +77,8 @@ export default function ReminderModal({
         emailSubject: "",
         emailBody: "",
         targetEmail: "",
+        category: "",
+        subcategory: "",
       });
       
       if (userType === "client") setTargetOption("self");
@@ -120,12 +103,13 @@ export default function ReminderModal({
     >
   ) => {
     const { name, value } = e.target;
-    setFormState((prev) => {
+    setFormState((prev: Reminder) => {
       const updated = { ...prev, [name]: value };
       if (name === "emailSubject") updated.title = value;
       return updated;
     });
   };
+  
 
   const handleFinalSubmit = async () => {
     try {
@@ -275,6 +259,41 @@ export default function ReminderModal({
                   </select>
                 </div>
               )}
+              <label className="block font-semibold mt-4">Category</label>
+              <select
+                value={formState.category}
+                onChange={(e) =>
+                  setFormState({ ...formState, category: e.target.value })
+                }
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="">Select category</option>
+                <option value="Quote Follow Up">Quote Follow Up</option>
+                <option value="Life">Life</option>
+                <option value="Commercial">Commercial</option>
+                <option value="PL Home">PL Home</option>
+                <option value="PL Auto">PL Auto</option>
+                <option value="PL Renters">PL Renters</option>
+              </select>
+
+              <label className="block font-semibold mt-4">Subcategory</label>
+              <select
+                value={formState.subcategory}
+                onChange={(e) =>
+                  setFormState({ ...formState, subcategory: e.target.value })
+                }
+                className="w-full px-3 py-2 border rounded"
+              >
+                <option value="">Select subcategory</option>
+                <option value="Quotes Follow Up">Quotes Follow Up</option>
+                <option value="No Pay">No Pay</option>
+                <option value="Cancel Status">Cancel Status</option>
+                <option value="Cancel">Cancel</option>
+                <option value="No Renewal">No Renewal</option>
+                <option value="Discount Remove">Discount Remove</option>
+                <option value="Documents Needed">Documents Needed</option>
+              </select>
+
               <div>
                 <label className="block font-semibold">Title:</label>
                 {(isEditing || isCreating) && !isPastDue ? (
