@@ -219,6 +219,23 @@ router.patch("/:id/uncomplete", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Failed to mark item uncomplete" });
   }
 });
+// Fetch checklist for a specific user (admin viewing another user)
+router.get("/user/:userId", authenticateToken, async (req, res) => {
+  try {
+    const items = await ChecklistItem.find({
+      creatorId: req.params.userId,
+      deleted: false,
+    })
+      .populate("creatorId", "username firstName lastName")
+      .sort({ createdAt: -1 }); // Optional: apply a different sort
+
+    res.status(200).json(items);
+  } catch (err) {
+    console.error("Failed to fetch checklist for user:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
 
 

@@ -257,12 +257,17 @@ export default function ProfilePage() {
       });
       setUser(refreshed.data.user);
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        setUpdateError(err.response.data.message);
+      console.error("Update error:", err);
+
+      if (axios.isAxiosError(err)) {
+        const backendMessage = err.response?.data?.message;
+
+        setUpdateError(
+          backendMessage || "Server error. Please try again later."
+        );
       } else {
-        setUpdateError("Failed to update info.");
+        setUpdateError("Unexpected error. Please refresh and try again.");
       }
-      console.error(err);
     }
   };
 
@@ -284,9 +289,13 @@ export default function ProfilePage() {
             <div className="bg-white text-blue-800 p-6 rounded-md shadow-md w-full lg:w-1/2">
               <p className="mb-2">
                 <strong>Name:</strong>{" "}
-                {user.firstName.charAt(0).toUpperCase() +
-                  user.firstName.slice(1)}{" "}
-                {user.lastName.charAt(0).toUpperCase() + user.lastName.slice(1)}
+                {user?.firstName && user?.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user?.firstName
+                  ? user.firstName
+                  : user?.lastName
+                  ? user.lastName
+                  : "Unknown"}
               </p>
 
               <p className="mb-2">

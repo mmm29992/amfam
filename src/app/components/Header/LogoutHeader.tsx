@@ -18,7 +18,7 @@ export default function LogoutHeader() {
       <div className="flex-1 flex items-center justify-between px-6">
         <div className="flex items-center space-x-2">
           <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-            Duluth, Ga
+            Engle Agency
           </button>
           <span className="text-blue-800 font-extrabold">with</span>
           <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
@@ -27,13 +27,8 @@ export default function LogoutHeader() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-            Find an Agent
-          </button>
-          <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-            Contact Us
-          </button>
           <button
+            id="signin-trigger"
             onClick={openModal}
             className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold"
           >
@@ -46,43 +41,23 @@ export default function LogoutHeader() {
 
       <div className="flex-2 flex flex-col justify-center">
         <div className="flex justify-between items-center px-6">
-          <div className="flex items-center space-x-4 lg:space-x-8">
+          {/* Left: AmFam Logo */}
+          <div className="flex items-center">
             <img
               src="/amfam-logo.svg"
               alt="American Family Insurance Logo"
               className="h-[80px] w-auto mr-4"
             />
-            <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-              Insurance
-            </button>
-            <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-              Claims
-            </button>
-            <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-              Customer Support
-            </button>
-            <button className="text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-              Resources
-            </button>
           </div>
+          <h3 className="text-gray-900 text-xl"> Hablamos Español!!</h3>
 
-          <div className="flex space-x-4 items-center">
-            <button className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold">
-              <img
-                src="/messageicon.svg"
-                alt="Message Icon"
-                className="w-5 h-5 mr-2"
-              />
-              Message Us
-            </button>
-            <button className="flex items-center text-blue-800 bg-transparent hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-              <img
-                src="/searchicon.svg"
-                alt="Search Icon"
-                className="w-5 h-5 mr-2"
-              />
-              Search
-            </button>
+          {/* Right: Engle Agency Logo */}
+          <div className="flex items-center">
+            <img
+              src="/englelogo.png"
+              alt="Engle Agency Logo"
+              className="h-[100px] w-auto ml-4"
+            />
           </div>
         </div>
       </div>

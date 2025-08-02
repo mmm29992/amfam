@@ -241,17 +241,6 @@ router.post("/logout", (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-// Get all clients
-router.get("/clients", authenticateToken, async (req, res) => {
-  try {
-    const clients = await User.find({ userType: "client" }).select("email");
-    res.json(clients);
-  } catch (err) {
-    console.error("Error fetching clients:", err);
-    res.status(500).json({ message: "Error fetching clients" });
-  }
-});
-
 // Change password
 router.post("/change-password", authenticateToken, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
@@ -276,25 +265,43 @@ router.post("/change-password", authenticateToken, async (req, res) => {
 });
 
 // Update profile
+// Update profile
 router.post("/update-profile", authenticateToken, async (req, res) => {
   const { newUsername, newEmail, password } = req.body;
 
   try {
     const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password." });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid password." });
+    }
+
+    if (!newUsername && !newEmail) {
+      return res.status(400).json({ message: "No new values provided." });
+    }
 
     if (newUsername && newUsername !== user.username) {
       const usernameTaken = await User.findOne({ username: newUsername });
-      if (usernameTaken)
-        return res.status(400).json({ message: "Username already taken." });
+      if (usernameTaken) {
+        return res
+          .status(400)
+          .json({ message: "Username already taken." });
+      }
       user.username = newUsername;
     }
 
     if (newEmail && newEmail !== user.email) {
       const emailTaken = await User.findOne({ email: newEmail });
-      if (emailTaken)
-        return res.status(400).json({ message: "Email already in use." });
+      if (emailTaken) {
+        return res
+          .status(400)
+          .json({ message: "Email already in use." });
+      }
       user.email = newEmail;
     }
 
@@ -304,9 +311,12 @@ router.post("/update-profile", authenticateToken, async (req, res) => {
     res.status(200).json({ message: "Profile updated successfully." });
   } catch (err) {
     console.error("Profile update error:", err);
-    res.status(500).json({ message: "Failed to update profile." });
+    res
+      .status(500)
+      .json({ message: err?.message || "Failed to update profile." });
   }
 });
+
 
 // Delete account
 router.post("/delete-account", authenticateToken, async (req, res) => {
@@ -572,12 +582,11 @@ router.post("/validate-employee-code", async (req, res) => {
   console.log(`✅ Employee access code validated: ${code}`);
 });
 
-
 // 👇 Add this route
 router.get("/clients", authenticateToken, async (req, res) => {
   try {
     const clients = await User.find({ userType: "client" }).select(
-      "firstName lastName email _id"
+      "firstName lastName email username userType createdAt updatedAt _id"
     );
     res.json(clients);
   } catch (err) {
@@ -585,6 +594,70 @@ router.get("/clients", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+router.get("/users", authenticateToken, async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+});
+
+// DELETE any user (admin only)
+router.delete("/users/:id", authenticateToken, async (req, res) => {
+  const { userId, userType } = req.user;
+  const { adminCode } = req.body;
+
+  if (userType !== "owner") {
+    return res.status(403).json({ message: "Only owner can delete users." });
+  }
+
+  if (!adminCode) {
+    return res.status(400).json({ message: "Admin code required." });
+  }
+
+  const ownerCode = await OwnerCode.findOne();
+  if (!ownerCode || adminCode.trim() !== ownerCode.code.trim()) {
+    return res.status(401).json({ message: "Invalid admin code." });
+  }
+
+  const userToDelete = await User.findById(req.params.id);
+  if (!userToDelete) {
+    return res.status(404).json({ message: "User not found." });
+  }
+
+  if (userToDelete.userType === "owner") {
+    return res.status(403).json({ message: "Cannot delete owner account." });
+  }
+
+  await User.findByIdAndDelete(req.params.id);
+  res.status(200).json({ message: "User deleted successfully." });
+});
+
+router.post("/view-password", async (req, res) => {
+  const { userId, ownerCode } = req.body;
+
+  try {
+    const codeDoc = await OwnerCode.findOne({ code: ownerCode });
+    if (!codeDoc) {
+      return res.status(403).json({ message: "Invalid owner code." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user || !user.password) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Return password ONLY for owners
+    res.json({ password: user.password });
+  } catch (err) {
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
 
 
 module.exports = router;

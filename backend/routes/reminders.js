@@ -27,13 +27,9 @@ router.post("/", authenticateToken, async (req, res) => {
     });
   }
 
-  if (user.userType === "client") {
-    if (sendEmail && targetEmail !== user.email) {
-      return res.status(403).json({
-        message: "Clients can only set reminders for their own email.",
-      });
-    }
-  }
+  
+
+
 
   try {
     const newReminder = await Reminder.create({
@@ -146,5 +142,24 @@ router.post("/:id/restore", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+// GET reminders for a specific user (admin use)
+// Fetch reminders for a specific user (admin viewing another user)
+router.get("/user/:userId", authenticateToken, async (req, res) => {
+  try {
+    const reminders = await Reminder.find({
+      creatorId: req.params.userId,
+      deleted: false,
+    })
+      .sort({ scheduledTime: 1 })
+      .populate("creatorId", "firstName lastName");
+
+    res.status(200).json(reminders);
+  } catch (err) {
+    console.error("Error fetching user reminders:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 
 module.exports = router;

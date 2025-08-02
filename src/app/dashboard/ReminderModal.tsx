@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import axiosInstance from "../axiosInstance";
 import { Reminder } from "@/types/reminder";
 
-
 interface ReminderModalProps {
   reminder: Reminder | null;
   isCreating: boolean;
@@ -41,46 +40,45 @@ export default function ReminderModal({
     message: "",
     scheduledTime: new Date().toISOString(),
     emailSubject: "",
-    emailBody: "",
     targetEmail: "",
     category: "",
     subcategory: "",
   });
-  
 
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
   const [targetOption, setTargetOption] = useState<"self" | "client">("self");
   const isPastDue = new Date(formState.scheduledTime) < new Date();
 
-
   useEffect(() => {
     if (reminder) {
       setFormState({
         ...reminder,
         emailSubject: reminder.emailSubject || `Reminder: ${reminder.title}`,
-        emailBody:
-          reminder.emailBody ||
-          generateEmailBody(reminder.message, reminder.scheduledTime),
+        message: reminder.message || "",
       });
-      setTargetOption(
-        reminder.targetEmail && reminder.targetEmail !== userEmail
-          ? "client"
-          : "self"
-      );
     } else {
+      const initialTemplate = `Hi there,
+
+Just a friendly reminder for:
+
+[Insert message here]
+
+Scheduled for: ${new Date().toLocaleString()}
+
+Stay on top of things!`;
+
       setFormState({
         _id: "",
         title: "",
-        message: "",
-        scheduledTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        message: initialTemplate,
         emailSubject: "",
-        emailBody: "",
+        scheduledTime: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         targetEmail: "",
         category: "",
         subcategory: "",
       });
-      
+
       if (userType === "client") setTargetOption("self");
     }
   }, [reminder]);
@@ -105,14 +103,28 @@ export default function ReminderModal({
     const { name, value } = e.target;
     setFormState((prev: Reminder) => {
       const updated = { ...prev, [name]: value };
+
       if (name === "emailSubject") updated.title = value;
+      if (name === "title") updated.emailSubject = value;
+
       return updated;
     });
   };
-  
 
   const handleFinalSubmit = async () => {
     try {
+      const isClient = userType === "client";
+      // 🔧 Ensure client reminders always use their own email
+      if (isClient) {
+        formState.targetEmail = userEmail;
+      }
+
+      console.log("User Type:", userType);
+      console.log("User Email:", userEmail);
+      console.log("Target Email in form:", formState.targetEmail);
+
+      // Determine if it's a client creating for themselves
+      // or an employee creating for self or another client
       const isForClient =
         userType === "employee" &&
         targetOption === "client" &&
@@ -120,15 +132,41 @@ export default function ReminderModal({
 
       const payload = {
         ...formState,
-        targetEmail: isForClient ? formState.targetEmail : userEmail,
-        emailBody:
-          formState.emailBody ||
-          generateEmailBody(formState.message, formState.scheduledTime),
+        // Target email logic:
+        // - If client: force their own email
+        // - If employee creating for client: use selected email
+        // - If employee creating for themselves: use their own email
+        targetEmail: isClient
+          ? userEmail
+          : isForClient
+          ? formState.targetEmail
+          : userEmail,
+
+        // Email content
+        emailBody: formState.message,
         emailSubject: formState.emailSubject || `Reminder: ${formState.title}`,
-        forClient: isForClient,
+
+        // Flag for backend to know it's for a client
+        forClient: isClient ? true : isForClient,
+
+        // Optional: ensures backend doesn't complain about missing creatorId
+        // Only needed if you're handling creator on frontend (usually you don’t)
+        // creatorId: currentUserId,
       };
 
+      console.log("Final payload:", payload);
+
       if (isCreating) {
+        console.log(
+          "Submitting reminder with targetEmail:",
+          payload.targetEmail
+        );
+
+        console.log(
+          "Submitting reminder with targetEmail:",
+          payload.targetEmail
+        );
+
         await axiosInstance.post("/reminders", {
           ...payload,
           sendEmail: true,
@@ -227,15 +265,15 @@ export default function ReminderModal({
               <label className="block font-semibold mb-1">Body:</label>
               {(isEditing || isCreating) && !isPastDue ? (
                 <textarea
-                  name="emailBody"
-                  value={formState.emailBody}
+                  name="message"
+                  value={formState.message}
                   onChange={handleChange}
                   rows={8}
                   className="w-full px-3 py-2 border rounded whitespace-pre-wrap"
                 />
               ) : (
                 <pre className="bg-white border rounded p-2 whitespace-pre-wrap overflow-auto">
-                  {formState.emailBody || fallbackBody}
+                  {formState.message}
                 </pre>
               )}
             </div>

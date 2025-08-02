@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import axiosInstance from "../../axiosInstance";
 
 export default function ClientHeader() {
+  const router = useRouter();
   const [user, setUser] = useState<{
     username: string;
     userType: string;
@@ -32,10 +34,11 @@ export default function ClientHeader() {
 
   return (
     <header className="h-[150px] w-full bg-white flex flex-col">
+      {/* Top Row */}
       <div className="flex-1 flex items-center justify-between px-6">
         <div className="flex items-center space-x-2">
           <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-            Duluth, Ga
+            Engle Agency
           </button>
           <span className="text-blue-800 font-extrabold">with</span>
           <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
@@ -44,11 +47,11 @@ export default function ClientHeader() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-            Find an Agent
-          </button>
-          <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-            Contact Us
+          <button
+            onClick={() => router.push("/profile")}
+            className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+          >
+            My Profile
           </button>
           <button
             onClick={handleLogout}
@@ -61,47 +64,50 @@ export default function ClientHeader() {
 
       <div className="h-[1px] bg-blue-800 w-full"></div>
 
-      <div className="flex-2 flex flex-col justify-center">
-        <div className="flex justify-between items-center px-6">
-          <div className="flex items-center space-x-4 lg:space-x-8">
-            <img
-              src="/amfam-logo.svg"
-              alt="American Family Insurance Logo"
-              className="h-[80px] w-auto mr-4"
-            />
-            <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-              Insurance
-            </button>
-            <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-              Claims
-            </button>
-            <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-              Customer Support
-            </button>
-            <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-              Resources
-            </button>
-          </div>
-
-          <div className="flex space-x-4 items-center">
-            <button className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold">
-              <img
-                src="/messageicon.svg"
-                alt="Message Icon"
-                className="w-5 h-5 mr-2"
-              />
-              Message Us
-            </button>
-            <button className="flex items-center text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-              <img
-                src="/searchicon.svg"
-                alt="Search Icon"
-                className="w-5 h-5 mr-2"
-              />
-              Search
-            </button>
-          </div>
+      {/* Bottom Row: Nav left, Message right */}
+      <div className="flex-2 flex justify-between items-center px-6">
+        {/* Left Nav Buttons */}
+        <div className="flex items-center space-x-4 lg:space-x-8">
+          <img
+            src="/amfam-logo.svg"
+            alt="American Family Insurance Logo"
+            className="h-[80px] w-auto mr-4"
+          />
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => router.push("/quotes/clients")}
+            className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+          >
+            My Quotes
+          </button>
         </div>
+
+        {/* Center Logo */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+          <img
+            src="/englelogo.png"
+            alt="Engle Logo"
+            className="h-[90px] max-w-[150px] object-contain"
+          />
+        </div>
+
+        {/* Right Message Button */}
+        <button
+          onClick={() => router.push("/chat/clients")}
+          className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold"
+        >
+          <img
+            src="/messageicon.svg"
+            alt="Message Icon"
+            className="w-5 h-5 mr-2"
+          />
+          Message Us
+        </button>
       </div>
 
       <div className="h-[2px] bg-red-600 w-full"></div>

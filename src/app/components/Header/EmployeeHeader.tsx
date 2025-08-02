@@ -37,7 +37,7 @@ export default function EmployeeHeader() {
       <div className="flex-1 flex items-center justify-between px-6">
         <div className="flex items-center space-x-2">
           <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-            Duluth, Ga
+            Engle Agency
           </button>
           <span className="text-blue-800 font-extrabold">with</span>
           <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
@@ -53,9 +53,6 @@ export default function EmployeeHeader() {
             My Profile
           </button>
 
-          <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
-            Contact Us
-          </button>
           <button
             onClick={handleLogout}
             className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
@@ -93,6 +90,22 @@ export default function EmployeeHeader() {
             >
               Quotes
             </button>
+
+            <button
+              onClick={() => router.push("/adminuserpage")}
+              className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+            >
+              Users
+            </button>
+          </div>
+
+          {/* Center Logo */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+            <img
+              src="/englelogo.png"
+              alt="Engle Logo"
+              className="h-[90px] max-w-[150px] object-contain"
+            />
           </div>
 
           <div className="flex space-x-4 items-center">
@@ -103,14 +116,6 @@ export default function EmployeeHeader() {
                 className="w-5 h-5 mr-2"
               />
               Message Us
-            </button>
-            <button className="flex items-center text-blue-800 hover:bg-blue-100 px-4 py-2 rounded font-extrabold">
-              <img
-                src="/searchicon.svg"
-                alt="Search"
-                className="w-5 h-5 mr-2"
-              />
-              Search
             </button>
           </div>
         </div>

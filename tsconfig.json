@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/axiosInstance.js", "backend/routes/reminders.js", "backend/models/Reminder.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/axiosInstance.js", "backend/routes/reminders.js", "backend/models/Reminder.js", "src/app/components/ChatBox.tsx"],
   "exclude": ["node_modules"]
 }
