@@ -31,12 +31,6 @@ type Conversation = {
   }[];
 };
 
-type Message = {
-  senderId: string;
-  message: string;
-  isSystem: boolean;
-};
-
 export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);

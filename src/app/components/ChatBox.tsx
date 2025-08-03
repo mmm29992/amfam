@@ -8,14 +8,21 @@ type Message = {
   message: string;
   isSystem: boolean;
   seenBy?: string[];
-  timestamp?: string;
+  timestamp: string;
+};
+
+type Conversation = {
+  _id: string;
+  clientId: string;
+  assignedEmployeeId?: string;
+  messages: Message[];
 };
 
 type ChatBoxProps = {
   currentUserId: string;
   clientId: string;
   className?: string;
-  onConvoLoaded?: (convo: any) => void;
+  onConvoLoaded?: (convo: Conversation) => void;
 };
 
 export default function ChatBox({
@@ -25,13 +32,15 @@ export default function ChatBox({
   onConvoLoaded = () => {},
 }: ChatBoxProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [convo, setConvo] = useState<any>(null);
+  const [convo, setConvo] = useState<Conversation | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
+
+  console.log("Loaded convo:", convo);
 
   useEffect(() => {
     const fetchConvo = async () => {
