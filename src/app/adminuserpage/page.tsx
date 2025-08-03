@@ -83,10 +83,10 @@ export default function AdminUsersPage() {
       const refreshed = await axiosInstance.get("/auth/users");
       console.log("Users refreshed");
       setUsers(refreshed.data);
-    } catch (err: any) {
-      console.log("Error caught");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
       const msg =
-        err?.response?.data?.message || "Failed to delete user. Try again.";
+        error?.response?.data?.message || "Failed to delete user. Try again.";
       toast.error(msg);
       console.error("Delete error:", err);
     }
@@ -128,7 +128,9 @@ export default function AdminUsersPage() {
               ["All", "client", "employee"].map((role) => (
                 <button
                   key={role}
-                  onClick={() => setFilter(role as any)}
+                  onClick={() =>
+                    setFilter(role as "All" | "client" | "employee")
+                  }
                   className={`px-4 py-2 rounded font-bold transition ${
                     filter === role
                       ? "bg-white text-blue-800"

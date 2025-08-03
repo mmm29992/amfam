@@ -1,7 +1,9 @@
 "use client";
 import LogoutHeader from "./components/Header/LogoutHeader";
+import { JSX } from "react";
 
-export default function Home() {
+
+export default function Home(): JSX.Element {
   return (
     <div className="bg-blue-800 min-h-screen scroll-smooth">
       {/* Header (white background only) */}
