@@ -17,19 +17,6 @@ type Client = {
   email: string;
 };
 
-// Shared email template function
-function generateEmailBody(message: string, scheduledTime: string): string {
-  return `Hi there,
-
-Just a friendly reminder for:
-
-${message}
-
-Scheduled for: ${new Date(scheduledTime).toLocaleString()}
-
-Stay on top of things!`;
-}
-
 export default function ReminderModal({
   reminder,
   isCreating,
@@ -48,7 +35,6 @@ export default function ReminderModal({
     category: "",
     subcategory: "",
   } as Reminder);
-
 
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
@@ -187,7 +173,6 @@ Stay on top of things!`;
     }
   };
 
-  
   if (!reminder && !isCreating) return null;
 
   return (

@@ -52,8 +52,6 @@ export default function Dashboard() {
   const [sortOption, setSortOption] = useState<"newest" | "oldest">("newest");
   const [creatorFilter, setCreatorFilter] = useState<string>("all");
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
-  const [newText, setNewText] = useState("");
-  const [newDeadline, setNewDeadline] = useState("");
   const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [selectedChecklistItem, setSelectedChecklistItem] =
     useState<ChecklistItem | null>(null);
@@ -133,14 +131,7 @@ export default function Dashboard() {
     ).values()
   );
 
-  const handleLogout = async () => {
-    try {
-      await axiosInstance.post("/auth/logout");
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+  
 
   const handleDelete = async (id: string) => {
     const confirm = window.confirm(

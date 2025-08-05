@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import DynamicHeader from "../components/Header/DynamicHeader"; // Adjust the path if needed
 
@@ -34,10 +34,13 @@ export default function ProfilePage() {
   const [deleteError, setDeleteError] = useState("");
   const [deleteSuccess, setDeleteSuccess] = useState("");
   const [newOwnerCode, setNewOwnerCode] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ownerCodeSuccess, setOwnerCodeSuccess] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [ownerCodeError, setOwnerCodeError] = useState("");
   const [oldCode, setOldCode] = useState("");
   const [newCode, setNewCode] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [autoGenerate, setAutoGenerate] = useState(false);
   const [codeMessage, setCodeMessage] = useState("");
   const [codeError, setCodeError] = useState("");
@@ -60,7 +63,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5001/api/auth/update-owner-code",
         {
           oldCode,
@@ -120,7 +123,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5001/api/auth/delete-account",
         { password: deletePassword, confirmPassword: confirmDeletePassword },
         { withCredentials: true }
@@ -195,7 +198,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5001/api/auth/change-password",
         {
           currentPassword,
@@ -236,7 +239,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5001/api/auth/update-profile",
         {
           newUsername,
@@ -473,7 +476,7 @@ export default function ProfilePage() {
                 onClick={async () => {
                   setVerifyError("");
                   try {
-                    const res = await axios.post(
+                    await axios.post(
                       "http://localhost:5001/api/auth/verify-owner-code",
                       {
                         userId: user?._id,
@@ -482,7 +485,7 @@ export default function ProfilePage() {
                       { withCredentials: true }
                     );
                     setIsVerified(true);
-                  } catch (err) {
+                  } catch {
                     setVerifyError("Invalid verification code.");
                   }
                 }}
@@ -535,7 +538,7 @@ export default function ProfilePage() {
                             );
 
                             setEmployeeCode(random);
-                          } catch (err) {
+                          } catch {
                             setEmployeeCodeError("Failed to regenerate code.");
                             setEmployeeCode("");
                           }

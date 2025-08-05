@@ -5,7 +5,7 @@ import axiosInstance from "../axiosInstance";
 
 interface QuoteModalProps {
   onClose: () => void;
-  onSuccess: (quote: any) => void; // ❌ still using `any`
+  onSuccess: (quote: Quote) => void; // ✅ Replaced `any` with actual type
 }
 
 type Client = {
@@ -14,6 +14,15 @@ type Client = {
   lastName: string;
   email: string;
 };
+
+type Quote = {
+  _id: string;
+  quoteFileUrl: string;
+  notes?: string;
+  quoteType: string;
+  createdAt: string;
+};
+
 
 export default function QuoteModal({ onClose, onSuccess }: QuoteModalProps) {
   const [clients, setClients] = useState<Client[]>([]);
