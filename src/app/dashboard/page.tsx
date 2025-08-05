@@ -21,17 +21,19 @@ interface ChecklistItem {
   subcategory?: string; // ✅ specific type (e.g., No Pay, Cancel)
 }
 
+
 const capitalize = (str?: string) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
 type User = {
-  _id: string; // ✅ Add this
+  _id: string;
   firstName: string;
   lastName: string;
   username: string;
   email: string;
   userType: "client" | "employee" | "owner";
 };
+
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);

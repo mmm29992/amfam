@@ -50,13 +50,18 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
         userType,
         employeeAccessCode:
           userType === "employee" ? employeeAccessCode : undefined,
-      });      
+      });
       setStep(2);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Error sending verification code. Please try again."
-      );
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        setError(
+          axiosErr.response?.data?.message ||
+            "Error sending verification code. Please try again."
+        );
+      } else {
+        setError("An unknown error occurred.");
+      }
     }
   };
 
@@ -82,10 +87,16 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
       router.push("/dashboard");
       onClose();
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Verification failed. Please try again."
-      );
+    } catch (err: unknown) {
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const axiosErr = err as { response?: { data?: { message?: string } } };
+        setError(
+          axiosErr.response?.data?.message ||
+            "Verification failed. Please try again."
+        );
+      } else {
+        setError("An unknown error occurred.");
+      }
     }
   };
 
@@ -98,7 +109,6 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     confirmPassword &&
     password === confirmPassword &&
     (userType !== "employee" || employeeAccessCode);
-
 
   return (
     <div

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Modal from "../Modal"; // Adjust the path if needed
+import Image from "next/image";
 
 export default function LogoutHeader() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,20 +44,24 @@ export default function LogoutHeader() {
         <div className="flex justify-between items-center px-6">
           {/* Left: AmFam Logo */}
           <div className="flex items-center">
-            <img
+            <Image
               src="/amfam-logo.svg"
               alt="American Family Insurance Logo"
-              className="h-[80px] w-auto mr-4"
+              width={200}
+              height={160}
+              className="mr-4"
             />
           </div>
           <h3 className="text-gray-900 text-xl"> Hablamos Español!!</h3>
 
           {/* Right: Engle Agency Logo */}
           <div className="flex items-center">
-            <img
+            <Image
               src="/englelogo.png"
               alt="Engle Agency Logo"
-              className="h-[100px] w-auto ml-4"
+              width={105}
+              height={65}
+              className="ml-4"
             />
           </div>
         </div>

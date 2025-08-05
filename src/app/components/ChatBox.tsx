@@ -10,6 +10,11 @@ type Message = {
   seenBy?: string[];
   timestamp: string;
 };
+type TypingStatusPayload = {
+  userId: string;
+  isTyping: boolean;
+};
+
 
 type Conversation = {
   _id: string;
@@ -69,9 +74,9 @@ export default function ChatBox({
       setMessages((prev) => [...prev, msg]);
     });
 
-    socket.on("typingStatus", ({ userId, isTyping }: any) => {
-      if (userId !== currentUserId) setIsTyping(isTyping);
-    });
+socket.on("typingStatus", ({ userId, isTyping }: TypingStatusPayload) => {
+  if (userId !== currentUserId) setIsTyping(isTyping);
+});
 
     return () => {
       socket.off("receiveMessage");

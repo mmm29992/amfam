@@ -13,6 +13,10 @@ interface ReminderModalProps {
   userEmail: string;
 }
 
+type Client = {
+  email: string;
+};
+
 // Shared email template function
 function generateEmailBody(message: string, scheduledTime: string): string {
   return `Hi there,
@@ -43,7 +47,8 @@ export default function ReminderModal({
     targetEmail: "",
     category: "",
     subcategory: "",
-  });
+  } as Reminder);
+
 
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
@@ -88,7 +93,7 @@ Stay on top of things!`;
       axiosInstance
         .get("/auth/clients")
         .then((res) => {
-          const clients = res.data.map((u: any) => u.email);
+          const clients = res.data.map((u: Client) => u.email);
           setClientOptions(clients);
         })
         .catch((err) => console.error("Failed to fetch clients:", err));
@@ -182,11 +187,7 @@ Stay on top of things!`;
     }
   };
 
-  const fallbackBody = generateEmailBody(
-    formState.message,
-    formState.scheduledTime
-  );
-
+  
   if (!reminder && !isCreating) return null;
 
   return (

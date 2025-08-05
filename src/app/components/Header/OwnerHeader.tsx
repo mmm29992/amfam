@@ -6,6 +6,7 @@ import axiosInstance from "../../axiosInstance";
 
 export default function EmployeeHeader() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<{
     username: string;
     userType: string;
@@ -16,6 +17,7 @@ export default function EmployeeHeader() {
       try {
         const res = await axiosInstance.get("/auth/me");
         setUser(res.data.user);
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         console.error("Failed to fetch user");
       }
@@ -27,6 +29,7 @@ export default function EmployeeHeader() {
     try {
       await axiosInstance.post("/auth/logout");
       window.location.href = "/";
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       console.error("Logout failed:", err);
     }

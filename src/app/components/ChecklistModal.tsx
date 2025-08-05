@@ -3,6 +3,19 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../axiosInstance";
 
+type ChecklistItem = {
+  _id: string;
+  text: string;
+  completed: boolean;
+  completedAt?: string;
+  deadline?: string;
+  deleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  category?: string;
+  subcategory?: string;
+};
+
 
 
 const categoryOptions = [
@@ -27,7 +40,7 @@ const subcategoryOptions = [
 
 interface ChecklistModalProps {
   onClose: () => void;
-  onSuccess: (items: any[]) => void;
+  onSuccess: (items: ChecklistItem[]) => void;
 }
 
 const ChecklistModal: React.FC<ChecklistModalProps> = ({

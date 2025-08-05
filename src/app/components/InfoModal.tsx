@@ -19,6 +19,7 @@ type InfoModalProps = {
 const capitalize = (str?: string) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const InfoModal: React.FC<InfoModalProps> = ({
   user,
   currentUserType,
@@ -69,7 +70,6 @@ const InfoModal: React.FC<InfoModalProps> = ({
             <strong>User ID:</strong> {user._id}
           </p>
         </div>
-        
       </div>
     </div>
   );

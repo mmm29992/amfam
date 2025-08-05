@@ -57,8 +57,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
     setIdentifier("");
     setPassword("");
   };
-  
-
 
   const router = useRouter();
 
@@ -106,7 +104,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
 
       onLoginSuccess();
       router.push("/dashboard");
-      
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.error("Login error:", err.response?.data || err.message);
@@ -121,6 +118,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
     if (!ownerUserId || !ownerCode) return;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const res = await axios.post(
         "http://localhost:5001/api/auth/verify-owner-code",
         { userId: ownerUserId, code: ownerCode },
@@ -134,7 +132,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
       console.error("Owner code error:", err);
     }
   };
-  
 
   return (
     <div

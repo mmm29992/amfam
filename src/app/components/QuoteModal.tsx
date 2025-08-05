@@ -5,18 +5,24 @@ import axiosInstance from "../axiosInstance";
 
 interface QuoteModalProps {
   onClose: () => void;
-  onSuccess: (quote: any) => void;
+  onSuccess: (quote: any) => void; // ❌ still using `any`
 }
 
+type Client = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 export default function QuoteModal({ onClose, onSuccess }: QuoteModalProps) {
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [quoteType, setQuoteType] = useState("");
-
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -46,18 +52,16 @@ export default function QuoteModal({ onClose, onSuccess }: QuoteModalProps) {
   const handleSubmit = async () => {
     setError("");
 
-   if (!selectedClientId || !file || !quoteType) {
-     setError("Client, quote type, and a PDF file are required.");
-     return;
-   }
-
+    if (!selectedClientId || !file || !quoteType) {
+      setError("Client, quote type, and a PDF file are required.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("clientId", selectedClientId);
     formData.append("quoteFile", file);
     formData.append("notes", notes);
     formData.append("quoteType", quoteType);
-
 
     setLoading(true);
     try {
