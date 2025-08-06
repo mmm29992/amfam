@@ -6,6 +6,7 @@ import axiosInstance from "../../axiosInstance";
 
 export default function EmployeeHeader() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<{
     username: string;
     userType: string;
@@ -16,7 +17,7 @@ export default function EmployeeHeader() {
       try {
         const res = await axiosInstance.get("/auth/me");
         setUser(res.data.user);
-      } catch (err) {
+      } catch {
         console.error("Failed to fetch user");
       }
     };

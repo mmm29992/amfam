@@ -33,11 +33,6 @@ export default function ProfilePage() {
   const [confirmDeletePassword, setConfirmDeletePassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [deleteSuccess, setDeleteSuccess] = useState("");
-  const [newOwnerCode, setNewOwnerCode] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [ownerCodeSuccess, setOwnerCodeSuccess] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [ownerCodeError, setOwnerCodeError] = useState("");
   const [oldCode, setOldCode] = useState("");
   const [newCode, setNewCode] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -124,7 +119,7 @@ export default function ProfilePage() {
           withCredentials: true,
         });
         setUser(res.data.user);
-      } catch (err) {
+      } catch {
         console.error("Failed to load user info.");
       } finally {
         setLoading(false);
