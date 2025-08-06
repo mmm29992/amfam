@@ -54,29 +54,31 @@ export default function QuotesPage() {
 
     switch (searchQuery) {
       case "uploadedBy":
-        matchesSearch =
+        matchesSearch = !!(
           q.uploadedBy?.username?.toLowerCase().includes(term) ||
           q.uploadedBy?.firstName?.toLowerCase().includes(term) ||
-          q.uploadedBy?.lastName?.toLowerCase().includes(term);
+          q.uploadedBy?.lastName?.toLowerCase().includes(term)
+        );
         break;
 
       case "client":
-        matchesSearch =
+        matchesSearch = !!(
           q.clientId?.email?.toLowerCase().includes(term) ||
           q.clientId?.firstName?.toLowerCase().includes(term) ||
-          q.clientId?.lastName?.toLowerCase().includes(term);
+          q.clientId?.lastName?.toLowerCase().includes(term)
+        );
         break;
 
       case "quoteType":
-        matchesSearch = q.quoteType?.toLowerCase().includes(term);
+        matchesSearch = !!q.quoteType?.toLowerCase().includes(term);
         break;
 
       case "notes":
-        matchesSearch = q.notes?.toLowerCase().includes(term);
+        matchesSearch = !!q.notes?.toLowerCase().includes(term);
         break;
 
       case "date":
-        matchesSearch = new Date(q.createdAt)
+        matchesSearch = !!new Date(q.createdAt)
           .toLocaleDateString()
           .toLowerCase()
           .includes(term);
@@ -84,7 +86,7 @@ export default function QuotesPage() {
 
       case "all":
       default:
-        matchesSearch =
+        matchesSearch = !!(
           q.notes?.toLowerCase().includes(term) ||
           q.quoteType?.toLowerCase().includes(term) ||
           q.uploadedBy?.username?.toLowerCase().includes(term) ||
@@ -96,7 +98,8 @@ export default function QuotesPage() {
           new Date(q.createdAt)
             .toLocaleDateString()
             .toLowerCase()
-            .includes(term);
+            .includes(term)
+        );
         break;
     }
 
