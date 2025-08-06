@@ -6,7 +6,6 @@ import axiosInstance from "../../axiosInstance";
 
 export default function EmployeeHeader() {
   const router = useRouter();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [user, setUser] = useState<{
     username: string;
     userType: string;
@@ -17,7 +16,6 @@ export default function EmployeeHeader() {
       try {
         const res = await axiosInstance.get("/auth/me");
         setUser(res.data.user);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         console.error("Failed to fetch user");
       }
@@ -36,7 +34,9 @@ export default function EmployeeHeader() {
 
   return (
     <header className="h-[150px] w-full bg-white flex flex-col">
+      {/* Top Row */}
       <div className="flex-1 flex items-center justify-between px-6">
+        {/* Left: Engle Agency + Mauricia */}
         <div className="flex items-center space-x-2">
           <button className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded">
             Engle Agency
@@ -47,6 +47,7 @@ export default function EmployeeHeader() {
           </button>
         </div>
 
+        {/* Right: Profile + Logout */}
         <div className="flex items-center space-x-4">
           <button
             onClick={() => router.push("/profile")}
@@ -64,11 +65,14 @@ export default function EmployeeHeader() {
         </div>
       </div>
 
+      {/* Divider */}
       <div className="h-[1px] bg-blue-800 w-full"></div>
 
+      {/* Main Nav Row */}
       <div className="flex-2 flex flex-col justify-center">
-        <div className="flex justify-between items-center px-6">
-          <div className="flex items-center space-x-4 lg:space-x-8">
+        <div className="relative flex justify-between items-center px-6">
+          {/* Left: Nav Links */}
+          <div className="flex items-center space-x-4 lg:space-x-8 z-10">
             <img
               src="/amfam-logo.svg"
               alt="Logo"
@@ -92,7 +96,6 @@ export default function EmployeeHeader() {
             >
               Quotes
             </button>
-
             <button
               onClick={() => router.push("/adminuserpage")}
               className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
@@ -101,8 +104,8 @@ export default function EmployeeHeader() {
             </button>
           </div>
 
-          {/* Center Logo */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center justify-center">
+          {/* Center: Logo */}
+          <div className="">
             <img
               src="/englelogo.png"
               alt="Engle Logo"
@@ -110,8 +113,12 @@ export default function EmployeeHeader() {
             />
           </div>
 
-          <div className="flex space-x-4 items-center">
-            <button className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold">
+          {/* Right: Message Button */}
+          <div className="flex space-x-4 items-center z-10">
+            <button
+              onClick={() => router.push("/chat")} // Change if your chat page is different
+              className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold"
+            >
               <img
                 src="/messageicon.svg"
                 alt="Message"
@@ -123,6 +130,7 @@ export default function EmployeeHeader() {
         </div>
       </div>
 
+      {/* Bottom Divider */}
       <div className="h-[2px] bg-red-600 w-full"></div>
     </header>
   );
