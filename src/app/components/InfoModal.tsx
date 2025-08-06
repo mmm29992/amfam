@@ -13,15 +13,13 @@ type User = {
 type InfoModalProps = {
   user: User;
   onClose: () => void;
+  currentUserType: "client" | "employee" | "owner"; // ✅ Add this line
 };
 
 const capitalize = (str?: string) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
-const InfoModal: React.FC<InfoModalProps> = ({
-  user,
-  onClose,
-}) => {
+const InfoModal: React.FC<InfoModalProps> = ({ user, onClose }) => {
   const handleBackgroundClick = () => {
     onClose();
   };
