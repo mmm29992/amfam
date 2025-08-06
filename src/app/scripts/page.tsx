@@ -39,7 +39,7 @@ export default function ScriptsPage() {
           withCredentials: true,
         });
         setUser(res.data.user);
-      } catch (err) {
+      } catch {
         console.error("Failed to fetch user.");
       }
     };

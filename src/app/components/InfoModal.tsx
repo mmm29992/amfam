@@ -12,17 +12,14 @@ type User = {
 
 type InfoModalProps = {
   user: User;
-  currentUserType: "client" | "employee" | "owner"; // 👈 Add this
   onClose: () => void;
 };
 
 const capitalize = (str?: string) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const InfoModal: React.FC<InfoModalProps> = ({
   user,
-  currentUserType,
   onClose,
 }) => {
   const handleBackgroundClick = () => {

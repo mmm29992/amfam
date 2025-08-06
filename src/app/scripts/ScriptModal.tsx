@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,6 @@ const ScriptModal: React.FC<ScriptModalProps> = ({
   onSuccess,
   existingScript,
 }) => {
-  const router = useRouter();
   const [name, setName] = useState(existingScript?.name || "");
   const [english, setEnglish] = useState(existingScript?.english || "");
   const [translation, setTranslation] = useState(

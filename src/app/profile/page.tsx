@@ -76,32 +76,8 @@ export default function ProfilePage() {
       setOldCode("");
       setNewCode("");
       setAutoGenerate(false);
-    } catch (err) {
-      setCodeError(
-        axios.isAxiosError(err) && err.response?.data?.message
-          ? err.response.data.message
-          : "Failed to update code"
-      );
-    }
-  };
-
-  const handleOwnerCodeUpdate = async () => {
-    setOwnerCodeSuccess("");
-    setOwnerCodeError("");
-    if (!newOwnerCode.trim()) {
-      setOwnerCodeError("Code cannot be empty.");
-      return;
-    }
-    try {
-      await axios.post(
-        "http://localhost:5001/api/auth/set-owner-code",
-        { newCode: newOwnerCode },
-        { withCredentials: true }
-      );
-      setOwnerCodeSuccess("Owner verification code updated.");
-      setNewOwnerCode("");
-    } catch (err) {
-      setOwnerCodeError("Failed to update owner code.");
+    } catch {
+      setCodeError("Failed to update code");
     }
   };
 
@@ -166,7 +142,7 @@ export default function ProfilePage() {
           { withCredentials: true }
         );
         setEmployeeCode(res.data.code);
-      } catch (err) {
+      } catch {
         setEmployeeCodeError("No active employee code or failed to load.");
       }
     };

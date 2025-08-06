@@ -43,7 +43,7 @@ export default function FullScreenScriptPage() {
           withCredentials: true,
         });
         setScript(res.data);
-      } catch (err) {
+      } catch {
         setError("Failed to load script.");
       } finally {
         setLoading(false);
