@@ -1,13 +1,34 @@
-// utils/emailTransporter.js
 const nodemailer = require("nodemailer");
-require("dotenv").config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+function createTransporter(provider, email, password) {
+  let config;
 
-module.exports = transporter;
+  if (provider === "gmail") {
+    config = {
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // true for 465, false for 587
+      auth: { user: email, pass: password },
+    };
+  } else if (provider === "outlook") {
+    config = {
+      host: "smtp.office365.com",
+      port: 587,
+      secure: false,
+      auth: { user: email, pass: password },
+    };
+  } else if (provider === "yahoo") {
+    config = {
+      host: "smtp.mail.yahoo.com",
+      port: 465,
+      secure: true,
+      auth: { user: email, pass: password },
+    };
+  } else {
+    throw new Error("Unsupported email provider: " + provider);
+  }
+
+  return nodemailer.createTransport(config);
+}
+
+module.exports = createTransporter;

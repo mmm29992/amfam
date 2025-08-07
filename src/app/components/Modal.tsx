@@ -211,15 +211,20 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
                         setResetMessage(res.data.message);
                         setResetStatus("success");
                         setResetEmail("");
-                      } catch (err: any) {
-                        console.error(
-                          "Reset error:",
-                          err.response?.data || err.message
-                        );
-                        const msg =
-                          err?.response?.data?.message ||
-                          "Something went wrong. Please try again.";
-                        setResetMessage(msg);
+                      } catch (err: unknown) {
+                        if (axios.isAxiosError(err)) {
+                          console.error(
+                            "Reset error:",
+                            err.response?.data || err.message
+                          );
+                          const msg =
+                            err.response?.data?.message ||
+                            "Something went wrong. Please try again.";
+                          setResetMessage(msg);
+                        } else {
+                          console.error("Reset error:", err);
+                          setResetMessage("An unknown error occurred.");
+                        }
                         setResetStatus("error");
                       }
                     }}
