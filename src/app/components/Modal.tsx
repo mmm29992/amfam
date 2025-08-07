@@ -48,6 +48,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [step, setStep] = useState<"login" | "verifyOwnerCode">("login");
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
   const [ownerCode, setOwnerCode] = useState("");
+  const [showResetField, setShowResetField] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetStatus, setResetStatus] = useState<"success" | "error" | "">("");
 
   const resetModalState = () => {
     setStep("login");
@@ -179,6 +183,62 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
                   Sign up here
                 </a>
               </p>
+
+              <button
+                onClick={() => setShowResetField(!showResetField)}
+                className="text-sm text-blue-600 hover:underline mt-2"
+              >
+                Forgot password?
+              </button>
+
+              {showResetField && (
+                <div className="mt-3">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className=" text-gray-900 w-full border p-2 rounded mb-2"
+                  />
+                  <button
+                    className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                    onClick={async () => {
+                      try {
+                        const res = await axios.post(
+                          "http://localhost:5001/api/auth/request-password-reset",
+                          { email: resetEmail }
+                        );
+                        setResetMessage(res.data.message);
+                        setResetStatus("success");
+                        setResetEmail("");
+                      } catch (err: any) {
+                        console.error(
+                          "Reset error:",
+                          err.response?.data || err.message
+                        );
+                        const msg =
+                          err?.response?.data?.message ||
+                          "Something went wrong. Please try again.";
+                        setResetMessage(msg);
+                        setResetStatus("error");
+                      }
+                    }}
+                  >
+                    Send Temporary Password
+                  </button>
+                  {resetMessage && (
+                    <p
+                      className={`mt-2 text-sm text-center ${
+                        resetStatus === "error"
+                          ? "text-red-600"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {resetMessage}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </>
         ) : (

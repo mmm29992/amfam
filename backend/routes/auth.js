@@ -7,8 +7,63 @@ const authenticateToken = require("../middleware/authMiddleware");
 const EmployeeCode = require("../models/EmployeeCode");
 const VerificationCode = require("../models/VerificationCode");
 const nodemailer = require("nodemailer");
-
+const crypto = require("crypto");
+const transporter = require("../utils/emailTransporter"); // Already used above
 const router = express.Router();
+
+
+router.post("/request-password-reset", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "No account found with that email." });
+    }
+
+    // 1. Generate temporary password
+    const tempPassword = crypto.randomBytes(6).toString("hex"); // e.g. "8d2fc9"
+    const hashedTempPassword = await bcrypt.hash(tempPassword, 10);
+
+    // 2. Save the new hashed password
+    user.password = hashedTempPassword;
+    await user.save();
+
+    // 3. Send the email
+    const message = `
+Hi ${user.firstName || user.username},
+
+We’ve generated a temporary password for your account:
+
+🔐 Temporary Password: **${tempPassword}**
+
+You can now log in using this password and change it from your profile settings.
+
+If you didn’t request this reset, please contact us immediately.
+
+– The Support Team
+    `;
+
+    await transporter.sendMail({
+      from: `"Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Temporary Password",
+      text: message,
+    });
+
+    console.log(`✅ Temp password sent to: ${email}`);
+    return res.status(200).json({
+      message: "Temporary password sent to your email.",
+    });
+  } catch (err) {
+    console.error("Password reset error:", err);
+    return res.status(500).json({ message: "Server error." });
+  }
+});
+
+
 
 // Helper: Generate and send token in HTTP-only cookie
 const sendTokenCookie = (res, user) => {

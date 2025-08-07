@@ -43,9 +43,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <input type="checkbox" className="mr-2" />
           Remember Me
         </label>
-        <div className="text-sm text-blue-500">
-          <a href="#">Forgot User ID</a> | <a href="#">Forgot Password</a>
-        </div>
+       
       </div>
 
       <div className="flex justify-center mt-6">
