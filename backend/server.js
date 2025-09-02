@@ -20,9 +20,22 @@ const PORT = process.env.PORT || 5001;
 // ───── Middleware ─────
 app.use(express.json());
 app.use(cookieParser());
+
+const allowedOrigins = ["http://localhost:3000", "https://amfam.vercel.app"];
+const vercelPreviewRegex = /\.vercel\.app$/;
+app.set("trust proxy", 1); // Render proxy
+
+
+
 app.use(
   cors({
-    origin: "http://localhost:3000", // Frontend
+    origin(origin, cb) {
+      if (!origin) return cb(null, true); // curl/Postman or server-to-server
+      if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+        return cb(null, true);
+      }
+      return cb(new Error(`CORS blocked for origin: ${origin}`));
+    },
     credentials: true,
   })
 );
@@ -44,11 +57,20 @@ mongoose
 // ───── Socket.io Setup ─────
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin(origin, cb) {
+      if (!origin) return cb(null, true);
+      if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+        return cb(null, true);
+      }
+      return cb(new Error(`Socket.io CORS blocked for origin: ${origin}`));
+    },
     methods: ["GET", "POST", "PATCH"],
     credentials: true,
   },
 });
+
+app.options("*", cors());
+
 
 const userSocketMap = new Map(); // optional: for private messages if needed
 
@@ -84,6 +106,9 @@ app.set("io", io);
 
 // ───── Cron Jobs ─────
 require("./jobs/sendReminders");
+
+// --- Health check (add ABOVE the 404 middleware) ---
+app.get("/api/health", (_req, res) => res.status(200).json({ ok: true }));
 
 // ───── Fallback/Error Handling ─────
 app.use((req, res) => {

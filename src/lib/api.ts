@@ -2,13 +2,22 @@
 import axios from "axios";
 
 const baseURL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"
 ).replace(/\/+$/, "");
 
 const api = axios.create({
   baseURL,
   withCredentials: true, // keeps cookies/tokens if you use them
 });
+
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    console.error("API error:", err?.response?.data || err.message);
+    return Promise.reject(err);
+  }
+);
+
 
 // Optional: add interceptors for auth tokens
 // api.interceptors.request.use((config) => {
