@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 
 interface Script {
   _id?: string;
@@ -27,12 +27,6 @@ const ScriptModal: React.FC<ScriptModalProps> = ({
     existingScript?.translation || ""
   );
   const [error, setError] = useState("");
-  
-
-  
-
-  
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,17 +37,13 @@ const ScriptModal: React.FC<ScriptModalProps> = ({
 
     try {
       if (existingScript?._id) {
-        await axios.put(
-          `http://localhost:5001/api/scripts/${existingScript._id}`,
-          { name, english, translation },
-          { withCredentials: true }
-        );
+        await api.put(`/scripts/${existingScript._id}`, {
+          name,
+          english,
+          translation,
+        });
       } else {
-        await axios.post(
-          "http://localhost:5001/api/scripts",
-          { name, english, translation },
-          { withCredentials: true }
-        );
+        await api.post("/scripts", { name, english, translation });
       }
 
       onClose();
