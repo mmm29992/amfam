@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import LoginForm from "./LoginForm";
 import SignUpModal from "./SignUpModal";
 import { useRouter } from "next/navigation";
@@ -53,6 +53,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
   const [resetMessage, setResetMessage] = useState("");
   const [resetStatus, setResetStatus] = useState<"success" | "error" | "">("");
 
+  const router = useRouter();
+
   const resetModalState = () => {
     setStep("login");
     setOwnerCode("");
@@ -62,8 +64,6 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
     setPassword("");
   };
 
-  const router = useRouter();
-
   const isValidIdentifier = (value: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
@@ -72,10 +72,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
 
   if (!isOpen) return null;
 
-  const handleModalClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
+  const handleModalClick = (e: React.MouseEvent) => e.stopPropagation();
   const closeSignUpModal = () => setIsSignUpModalOpen(false);
   const openSignUpModal = () => setIsSignUpModalOpen(true);
 
@@ -86,20 +83,18 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
       setError("Please fill out both fields");
       return;
     }
-
     if (!isValidIdentifier(identifier)) {
       setError("Enter a valid email or username");
       return;
     }
 
     try {
-      const response = await axios.post(
-        "http://localhost:5001/api/auth/login",
+      const response = await api.post(
+        "/auth/login",
         { identifier, password, userType },
         { withCredentials: true }
       );
 
-      console.log("Login successful:", response.data);
       if (response.data.codeRequired) {
         setStep("verifyOwnerCode");
         setOwnerUserId(response.data.userId);
@@ -108,12 +103,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
 
       onLoginSuccess();
       router.push("/dashboard");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.error("Login error:", err.response?.data || err.message);
-      } else {
-        console.error("Login error:", err);
-      }
+    } catch (err: unknown) {
+      console.error("Login error:", err);
       setError("Invalid credentials");
     }
   };
@@ -122,9 +113,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
     if (!ownerUserId || !ownerCode) return;
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const res = await axios.post(
-        "http://localhost:5001/api/auth/verify-owner-code",
+      await api.post(
+        "/auth/verify-owner-code",
         { userId: ownerUserId, code: ownerCode },
         { withCredentials: true }
       );
@@ -134,6 +124,23 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
     } catch (err) {
       setError("Invalid owner code");
       console.error("Owner code error:", err);
+    }
+  };
+
+  const handleRequestPassword = async () => {
+    try {
+      const res = await api.post("/auth/request-password-reset", {
+        email: resetEmail,
+      });
+      setResetMessage(
+        res.data.message || "If that email exists, a code has been sent."
+      );
+      setResetStatus("success");
+      setResetEmail("");
+    } catch (err: unknown) {
+      console.error("Reset error:", err);
+      setResetMessage("Something went wrong. Please try again.");
+      setResetStatus("error");
     }
   };
 
@@ -163,6 +170,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
         <h2 className="text-2xl font-bold mb-6 text-center text-blue-800">
           Log in to My Account
         </h2>
+
         {step === "login" ? (
           <>
             <UserTypeSelection userType={userType} setUserType={setUserType} />
@@ -198,36 +206,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onLoginSuccess }) => {
                     placeholder="Enter your email"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
-                    className=" text-gray-900 w-full border p-2 rounded mb-2"
+                    className="text-gray-900 w-full border p-2 rounded mb-2"
                   />
                   <button
                     className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-                    onClick={async () => {
-                      try {
-                        const res = await axios.post(
-                          "http://localhost:5001/api/auth/request-password-reset",
-                          { email: resetEmail }
-                        );
-                        setResetMessage(res.data.message);
-                        setResetStatus("success");
-                        setResetEmail("");
-                      } catch (err: unknown) {
-                        if (axios.isAxiosError(err)) {
-                          console.error(
-                            "Reset error:",
-                            err.response?.data || err.message
-                          );
-                          const msg =
-                            err.response?.data?.message ||
-                            "Something went wrong. Please try again.";
-                          setResetMessage(msg);
-                        } else {
-                          console.error("Reset error:", err);
-                          setResetMessage("An unknown error occurred.");
-                        }
-                        setResetStatus("error");
-                      }
-                    }}
+                    onClick={handleRequestPassword}
                   >
                     Send Temporary Password
                   </button>
