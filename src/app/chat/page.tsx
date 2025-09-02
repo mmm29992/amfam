@@ -2,7 +2,7 @@
 
 import ChatBox from "../components/ChatBox";
 import { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import DynamicHeader from "../components/Header/DynamicHeader";
 import socket from "@/socket";
 import { Info } from "lucide-react"; // or use another icon library
@@ -65,11 +65,11 @@ export default function ChatPage() {
 
     const payload = { message: newMsg };
 
-    await axiosInstance.post(
+    await api.post(
       `/conversations/convo/${convo._id}/message`,
       payload
     );
-    const res = await axiosInstance.get("/conversations/all");
+    const res = await api.get("/conversations/all");
     setConvos(res.data);
 
     socket.emit("sendMessage", {
@@ -90,7 +90,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     const fetchUserAndClients = async () => {
-      const res = await axiosInstance.get("/auth/me");
+      const res = await api.get("/auth/me");
       const user = res.data.user;
       setCurrentUserId(user._id);
 
@@ -107,10 +107,10 @@ export default function ChatPage() {
         };
         setSelectedClient(clientProfile);
       } else {
-        const clientRes = await axiosInstance.get("/auth/clients");
+        const clientRes = await api.get("/auth/clients");
         setClients(clientRes.data);
 
-        const convoRes = await axiosInstance.get("/conversations/all");
+        const convoRes = await api.get("/conversations/all");
         setConvos(convoRes.data);
       }
     };
@@ -122,7 +122,7 @@ export default function ChatPage() {
     if (!currentUserId) return;
 
     const handleNewMessage = () => {
-      axiosInstance
+      api
         .get("/conversations/all")
         .then((res) => setConvos(res.data));
     };
@@ -231,7 +231,7 @@ export default function ChatPage() {
                         const convo = getConvoForClient(client._id);
                         if (convo) {
                           try {
-                            await axiosInstance.patch(
+                            await api.patch(
                               `/conversations/convo/${convo._id}/seen`
                             );
                           } catch (err) {
@@ -322,14 +322,14 @@ export default function ChatPage() {
                       {isUnassigned && (
                         <button
                           onClick={async () => {
-                            await axiosInstance.patch(
+                            await api.patch(
                               `/conversations/convo/${convo._id}/assign`
                             );
-                            const res = await axiosInstance.get(
+                            const res = await api.get(
                               "/conversations/all"
                             );
                             setConvos(res.data);
-                            const updatedConvo = await axiosInstance.get(
+                            const updatedConvo = await api.get(
                               `/conversations/convo/${convo._id}`
                             );
                             setConvo(updatedConvo.data);
@@ -342,14 +342,14 @@ export default function ChatPage() {
                       {isAssignedToMe && (
                         <button
                           onClick={async () => {
-                            await axiosInstance.patch(
+                            await api.patch(
                               `/conversations/convo/${convo._id}/unassign`
                             );
-                            const res = await axiosInstance.get(
+                            const res = await api.get(
                               "/conversations/all"
                             );
                             setConvos(res.data);
-                            const updatedConvo = await axiosInstance.get(
+                            const updatedConvo = await api.get(
                               `/conversations/convo/${convo._id}`
                             );
                             setConvo(updatedConvo.data);
