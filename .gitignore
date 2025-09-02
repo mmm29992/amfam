@@ -1,8 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# -----------------------------------
-# Dependencies
-# -----------------------------------
+# dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -12,67 +10,34 @@
 !.yarn/releases
 !.yarn/versions
 
-# -----------------------------------
-# Testing
-# -----------------------------------
+# testing
 /coverage
 
-# -----------------------------------
-# Next.js
-# -----------------------------------
+# next.js
 /.next/
 /out/
-/. next/cache
 
-# -----------------------------------
-# Production builds
-# -----------------------------------
+# production
 /build
 
-# -----------------------------------
-# Misc system files
-# -----------------------------------
+# misc
 .DS_Store
 *.pem
 
-# -----------------------------------
-# Debug logs
-# -----------------------------------
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-*.log
 
-# -----------------------------------
-# Environment files (keep local only)
-# -----------------------------------
+# env files (can opt-in for committing if needed)
 .env*
 
-# -----------------------------------
-# Deployment
-# -----------------------------------
+# vercel
 .vercel
 
-# -----------------------------------
-# TypeScript
-# -----------------------------------
+# typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# -----------------------------------
-# User uploads (local only, don’t commit)
-# -----------------------------------
 /uploads
-
-# -----------------------------------
-# Editor / IDE configs
-# -----------------------------------
-.vscode/
-*.swp
-*.swo
-
-# -----------------------------------
-# Lint / build caches
-# -----------------------------------
-.eslintcache
