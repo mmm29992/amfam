@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 
 interface QuoteModalProps {
   onClose: () => void;
@@ -36,7 +36,7 @@ export default function QuoteModal({ onClose, onSuccess }: QuoteModalProps) {
   useEffect(() => {
     const fetchClients = async () => {
       try {
-        const res = await axiosInstance.get("/auth/clients");
+        const res = await api.get("/auth/clients");
         setClients(res.data);
       } catch (err) {
         console.error("Failed to fetch clients:", err);
@@ -74,7 +74,7 @@ export default function QuoteModal({ onClose, onSuccess }: QuoteModalProps) {
 
     setLoading(true);
     try {
-      const res = await axiosInstance.post("/quotes/upload", formData, {
+      const res = await api.post("/quotes/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       onSuccess(res.data.quote);
