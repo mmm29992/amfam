@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import { format } from "date-fns";
 
 type ChecklistItem = {
@@ -27,7 +27,7 @@ const ChecklistModal: React.FC<ChecklistModalProps> = ({ user, onClose }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axiosInstance
+    api
       .get(`/checklist/user/${user._id}`) // 👈 Make sure this route is implemented or add a fallback using `.get("/checklist")` and filter manually
       .then((res) => setItems(res.data))
       .catch((err) => {
