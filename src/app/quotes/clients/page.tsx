@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axiosInstance from "../../axiosInstance";
+import api from "@/lib/api";
 import DynamicHeader from "../../components/Header/DynamicHeader";
 
 type Quote = {
@@ -21,7 +21,7 @@ export default function ClientQuotesPage() {
   useEffect(() => {
     const fetchClientQuotes = async () => {
       try {
-        const res = await axiosInstance.get("/quotes/me");
+        const res = await api.get("/quotes/me");
         setQuotes(res.data);
       } catch (err) {
         console.error("Failed to fetch client quotes:", err);
