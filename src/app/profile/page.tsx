@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import { useRouter } from "next/navigation";
-import DynamicHeader from "../components/Header/DynamicHeader"; // Adjust the path if needed
+import DynamicHeader from "../components/Header/DynamicHeader"; // Adjust the path if needed'
+import axios from "axios";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<{
@@ -49,24 +50,16 @@ export default function ProfilePage() {
   const handleUpdateCode = async () => {
     setCodeError("");
     setCodeMessage("");
-
     const finalCode = newCode.trim();
-
     if (!oldCode || !finalCode) {
       setCodeError("Old and new codes are required.");
       return;
     }
-
     try {
-      await axios.post(
-        "http://localhost:5001/api/auth/update-owner-code",
-        {
-          oldCode,
-          newCode: finalCode,
-        },
-        { withCredentials: true }
-      );
-
+      await api.post("/auth/update-owner-code", {
+        oldCode,
+        newCode: finalCode,
+      });
       setCodeMessage(`Code updated to: ${finalCode}`);
       setOldCode("");
       setNewCode("");
@@ -80,29 +73,22 @@ export default function ProfilePage() {
     setDeleteError("");
     setDeleteSuccess("");
 
-    console.log("Delete password:", deletePassword);
-    console.log("Confirm password:", confirmDeletePassword);
-
     if (!deletePassword.trim() || !confirmDeletePassword.trim()) {
       setDeleteError("Both fields are required.");
       return;
     }
-
     if (deletePassword !== confirmDeletePassword) {
       setDeleteError("Passwords do not match.");
       return;
     }
 
     try {
-      await axios.post(
-        "http://localhost:5001/api/auth/delete-account",
-        { password: deletePassword, confirmPassword: confirmDeletePassword },
-        { withCredentials: true }
-      );
+      await api.post("/auth/delete-account", {
+        password: deletePassword,
+        confirmPassword: confirmDeletePassword,
+      });
       setDeleteSuccess("Account deleted.");
-      setTimeout(() => {
-        router.push("/");
-      }, 1500);
+      setTimeout(() => router.push("/"), 1500);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         setDeleteError(err.response.data.message);
@@ -115,9 +101,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/api/auth/me", {
-          withCredentials: true,
-        });
+        const res = await api.get("/auth/me");
         setUser(res.data.user);
       } catch {
         console.error("Failed to load user info.");
@@ -125,26 +109,19 @@ export default function ProfilePage() {
         setLoading(false);
       }
     };
-
     fetchUser();
   }, []);
 
   useEffect(() => {
     const fetchEmployeeCode = async () => {
       try {
-        const res = await axios.get(
-          "http://localhost:5001/api/auth/get-employee-code",
-          { withCredentials: true }
-        );
+        const res = await api.get("/auth/get-employee-code");
         setEmployeeCode(res.data.code);
       } catch {
         setEmployeeCodeError("No active employee code or failed to load.");
       }
     };
-
-    if (user?.userType === "owner") {
-      fetchEmployeeCode();
-    }
+    if (user?.userType === "owner") fetchEmployeeCode();
   }, [user]);
 
   const handlePasswordChange = async () => {
@@ -155,12 +132,10 @@ export default function ProfilePage() {
       setPasswordError("All fields are required.");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setPasswordError("New passwords do not match.");
       return;
     }
-
     if (newPassword === currentPassword) {
       setPasswordError(
         "New password must be different from the current password."
@@ -169,15 +144,7 @@ export default function ProfilePage() {
     }
 
     try {
-      await axios.post(
-        "http://localhost:5001/api/auth/change-password",
-        {
-          currentPassword,
-          newPassword,
-        },
-        { withCredentials: true }
-      );
-
+      await api.post("/auth/change-password", { currentPassword, newPassword });
       setPasswordSuccess("Password updated successfully.");
       setCurrentPassword("");
       setNewPassword("");
@@ -198,46 +165,34 @@ export default function ProfilePage() {
       setUpdateError("Please enter your current password to proceed.");
       return;
     }
-
     if (!newUsername && !newEmail) {
       setUpdateError("Enter a new email or username.");
       return;
     }
-
     if (newUsername === user?.username && newEmail === user?.email) {
       setUpdateError("New values must be different from current.");
       return;
     }
 
     try {
-      await axios.post(
-        "http://localhost:5001/api/auth/update-profile",
-        {
-          newUsername,
-          newEmail,
-          password: confirmChangePassword,
-        },
-        { withCredentials: true }
-      );
+      await api.post("/auth/update-profile", {
+        newUsername,
+        newEmail,
+        password: confirmChangePassword,
+      });
 
       setUpdateSuccess("Profile updated successfully.");
       setNewUsername("");
       setNewEmail("");
       setConfirmChangePassword("");
 
-      // Refresh user info
-      const refreshed = await axios.get("http://localhost:5001/api/auth/me", {
-        withCredentials: true,
-      });
+      const refreshed = await api.get("/auth/me");
       setUser(refreshed.data.user);
     } catch (err) {
       console.error("Update error:", err);
-
       if (axios.isAxiosError(err)) {
-        const backendMessage = err.response?.data?.message;
-
         setUpdateError(
-          backendMessage || "Server error. Please try again later."
+          err.response?.data?.message || "Server error. Please try again later."
         );
       } else {
         setUpdateError("Unexpected error. Please refresh and try again.");
@@ -447,14 +402,11 @@ export default function ProfilePage() {
                 onClick={async () => {
                   setVerifyError("");
                   try {
-                    await axios.post(
-                      "http://localhost:5001/api/auth/verify-owner-code",
-                      {
-                        userId: user?._id,
-                        code: verifyInput,
-                      },
-                      { withCredentials: true }
-                    );
+                    await api.post("/auth/verify-owner-code", {
+                      userId: user?._id,
+                      code: verifyInput,
+                    });
+
                     setIsVerified(true);
                   } catch {
                     setVerifyError("Invalid verification code.");
@@ -494,19 +446,14 @@ export default function ProfilePage() {
 
                           try {
                             // Delete the old code first
-                            await axios.delete(
-                              "http://localhost:5001/api/auth/delete-employee-code",
-                              {
-                                withCredentials: true,
-                              }
-                            );
+                           await api.delete("/auth/delete-employee-code");
+
 
                             // Then create a new one
-                            await axios.post(
-                              "http://localhost:5001/api/auth/set-employee-code",
-                              { newCode: random },
-                              { withCredentials: true }
-                            );
+                            await api.post("/auth/set-employee-code", {
+                              newCode: random,
+                            });
+
 
                             setEmployeeCode(random);
                           } catch {
