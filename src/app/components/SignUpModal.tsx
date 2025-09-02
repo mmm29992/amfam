@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 type ModalProps = {
@@ -41,7 +41,7 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      await axiosInstance.post("/auth/start-registration", {
+      await api.post("/auth/start-registration", {
         firstName,
         lastName,
         username,
@@ -74,7 +74,7 @@ const SignUpModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     }
 
     try {
-      await axiosInstance.post("/auth/verify-email-code", {
+      await api.post("/auth/verify-email-code", {
         firstName,
         lastName,
         username,
