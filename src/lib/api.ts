@@ -1,9 +1,9 @@
 // src/lib/api.ts
 import axios from "axios";
 
-const baseURL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"
-).replace(/\/+$/, "");
+// Use '/api' if no NEXT_PUBLIC_API_URL is defined (to proxy through Next)
+const baseURL = (process.env.NEXT_PUBLIC_API_URL || "/api") // Adjusted to '/api' (proxy)
+  .replace(/\/+$/, "");
 
 const api = axios.create({
   baseURL,
@@ -17,15 +17,5 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
-
-
-// Optional: add interceptors for auth tokens
-// api.interceptors.request.use((config) => {
-//   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-//   if (token) {
-//     config.headers.Authorization = `Bearer ${token}`;
-//   }
-//   return config;
-// });
 
 export default api;
