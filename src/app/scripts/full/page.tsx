@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import ScriptModal from "../ScriptModal";
 import DynamicHeader from "../../components/Header/DynamicHeader";
 
@@ -42,7 +42,7 @@ function ScriptDetails() {
         return;
       }
       try {
-        const res = await axios.get(`http://localhost:5001/api/scripts/${id}`, {
+        const res = await api.get(`http://localhost:5001/api/scripts/${id}`, {
           withCredentials: true,
         });
         setScript(res.data);
