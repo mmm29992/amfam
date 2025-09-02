@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import axiosInstance from "../axiosInstance"; // adjust the path if needed
-
+import api from "@/lib/api";
 interface ChecklistItem {
   _id: string;
   text: string;
@@ -71,8 +70,8 @@ const ChecklistDetailModal: React.FC<Props> = ({
               if (!confirmDelete) return;
 
               try {
-                await axiosInstance.delete(`/checklist/${item._id}`);
-                const updated = await axiosInstance.get("/checklist/me");
+                await api.delete(`/checklist/${item._id}`);
+                const updated = await api.get("/checklist/me");
                 onDeleteSuccess?.(updated.data);
                 onClose();
               } catch (err) {
