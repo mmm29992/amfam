@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import DynamicHeader from "../components/Header/DynamicHeader";
 import QuoteModal from "../components/QuoteModal";
 
@@ -34,7 +34,7 @@ export default function QuotesPage() {
   useEffect(() => {
     const fetchQuotes = async () => {
       try {
-        const res = await axiosInstance.get("/quotes");
+        const res = await api.get("/quotes");
         setQuotes(res.data);
       } catch (err) {
         console.error("Failed to fetch quotes:", err);
@@ -228,7 +228,7 @@ export default function QuotesPage() {
                     if (!confirmed) return;
 
                     try {
-                      await axiosInstance.delete(`/quotes/${q._id}`);
+                      await api.delete(`/quotes/${q._id}`);
                       setQuotes((prev) =>
                         prev.filter((quote) => quote._id !== q._id)
                       );
@@ -251,7 +251,7 @@ export default function QuotesPage() {
             onClose={() => setShowModal(false)}
             onSuccess={() => {
               // re-fetch the full list to get populated fields
-              axiosInstance.get("/quotes").then((res) => {
+              api.get("/quotes").then((res) => {
                 setQuotes(res.data);
                 setShowModal(false);
               });
