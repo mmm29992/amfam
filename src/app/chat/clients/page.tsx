@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react"; // ✅ Add useRef
-import axiosInstance from "../../axiosInstance";
+import api from "@/lib/api";
 import socket from "@/socket";
 import DynamicHeader from "../../components/Header/DynamicHeader";
 import ChatBox from "../../components/ChatBox";
@@ -19,11 +19,11 @@ export default function ClientMessagingPage() {
   useEffect(() => {
     const loadClientData = async () => {
       try {
-        const userRes = await axiosInstance.get("/auth/me");
+        const userRes = await api.get("/auth/me");
         const userId = userRes.data.user._id;
         setCurrentUserId(userId);
 
-        const convoRes = await axiosInstance.get(
+        const convoRes = await api.get(
           `/conversations/convo/${userId}`
         );
         setConvoId(convoRes.data._id);
@@ -45,7 +45,7 @@ export default function ClientMessagingPage() {
     const payload = { message: newMsg };
 
     try {
-      await axiosInstance.post(
+      await api.post(
         `/conversations/convo/${convoId}/message`,
         payload
       );
