@@ -1,6 +1,6 @@
 "use client";
 import socket from "@/socket";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 
 type Message = {
@@ -50,7 +50,7 @@ export default function ChatBox({
   useEffect(() => {
     const fetchConvo = async () => {
       try {
-        const res = await axiosInstance.get(`/conversations/convo/${clientId}`);
+        const res = await api.get(`/conversations/convo/${clientId}`);
         setConvo(res.data);
         setMessages(res.data.messages || []);
         socket.emit("register", currentUserId);
