@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import { Reminder } from "@/types/reminder";
 
 interface ReminderModalProps {
@@ -76,7 +76,7 @@ Stay on top of things!`;
 
   useEffect(() => {
     if (userType === "employee") {
-      axiosInstance
+      api
         .get("/auth/clients")
         .then((res) => {
           const clients = res.data.map((u: Client) => u.email);
@@ -158,12 +158,12 @@ Stay on top of things!`;
           payload.targetEmail
         );
 
-        await axiosInstance.post("/reminders", {
+        await api.post("/reminders", {
           ...payload,
           sendEmail: true,
         });
       } else {
-        await axiosInstance.put(`/reminders/${formState._id}`, payload);
+        await api.put(`/reminders/${formState._id}`, payload);
       }
 
       if (onSave) onSave();
