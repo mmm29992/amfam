@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import { format } from "date-fns";
 
 
@@ -43,7 +43,7 @@ const QuotesModal: React.FC<Props> = ({ user, onClose }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axiosInstance
+    api
       .get("/quotes")
       .then((res) => {
         const filtered = res.data.filter((q: Quote) => {
