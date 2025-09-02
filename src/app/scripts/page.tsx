@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import ScriptModal from "./ScriptModal";
 import { useRouter } from "next/navigation";
 import DynamicHeader from "../components/Header/DynamicHeader";
@@ -35,9 +35,7 @@ export default function ScriptsPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:5001/api/auth/me", {
-          withCredentials: true,
-        });
+        const res = await api.get("/auth/me");
         setUser(res.data.user);
       } catch {
         console.error("Failed to fetch user.");
@@ -49,9 +47,7 @@ export default function ScriptsPage() {
 
   const fetchScripts = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/scripts", {
-        withCredentials: true,
-      });
+      const res = await api.get("/scripts");
       setScripts(res.data);
     } catch (err) {
       console.error(err);
@@ -79,9 +75,7 @@ export default function ScriptsPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5001/api/scripts/${id}`, {
-        withCredentials: true,
-      });
+      await api.delete(`/scripts/${id}`);
       fetchScripts();
     } catch (err) {
       console.error("Failed to delete script.", err);
@@ -89,7 +83,7 @@ export default function ScriptsPage() {
   };
 
   const filteredScripts = scripts.filter((script) => {
-    const term = debouncedSearchTerm;
+    const term = debouncedSearchTerm.toLowerCase();
     if (!term) return true;
 
     switch (searchField) {
