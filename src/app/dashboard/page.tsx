@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import ReminderModal from "./ReminderModal";
 import DynamicHeader from "../components/Header/DynamicHeader"; // Adjust path if needed
 import ChecklistModal from "../components/ChecklistModal"; // adjust path if needed
@@ -59,7 +59,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchChecklist = async () => {
       try {
-        const res = await axiosInstance.get("/checklist/me");
+        const res = await api.get("/checklist/me");
         setChecklist(res.data);
       } catch (err) {
         console.error("Failed to load checklist", err);
@@ -72,8 +72,8 @@ export default function Dashboard() {
   const toggleChecklistItem = async (item: ChecklistItem) => {
     const endpoint = item.completed ? "uncomplete" : "complete";
     try {
-      await axiosInstance.patch(`/checklist/${item._id}/${endpoint}`);
-      const res = await axiosInstance.get("/checklist/me");
+      await api.patch(`/checklist/${item._id}/${endpoint}`);
+      const res = await api.get("/checklist/me");
       setChecklist(res.data);
     } catch (err) {
       console.error("Failed to toggle item", err);
@@ -83,7 +83,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axiosInstance.get("/auth/me");
+        const response = await api.get("/auth/me");
         setUser(response.data.user);
       } catch (err) {
         console.error("Failed to fetch user:", err);
@@ -106,7 +106,7 @@ export default function Dashboard() {
 
   const fetchReminders = async () => {
     try {
-      const res = await axiosInstance.get("/reminders/me");
+      const res = await api.get("/reminders/me");
       setReminders(res.data);
     } catch (err) {
       console.error("Error loading reminders:", err);
@@ -140,7 +140,7 @@ export default function Dashboard() {
     if (!confirm) return;
 
     try {
-      await axiosInstance.delete(`/reminders/${id}`);
+      await api.delete(`/reminders/${id}`);
       fetchReminders();
     } catch (err) {
       console.error("Failed to delete reminder:", err);
@@ -149,7 +149,7 @@ export default function Dashboard() {
 
   const handleUndoDelete = async (id: string) => {
     try {
-      await axiosInstance.patch(`/reminders/${id}/restore`);
+      await api.patch(`/reminders/${id}/restore`);
       fetchReminders();
     } catch (err) {
       console.error("Failed to restore reminder:", err);
