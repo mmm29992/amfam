@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axiosInstance from "../../axiosInstance";
+import api from "@/lib/api";
 import LogoutHeader from "./LogoutHeader";
 import ClientHeader from "./ClientHeader";
 import EmployeeHeader from "./EmployeeHeader";
@@ -18,7 +18,7 @@ export default function DynamicHeader() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axiosInstance.get("/auth/me");
+        const res = await api.get("/auth/me");
         setUser(res.data.user);
       } catch {
         setUser(null);
