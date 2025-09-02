@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import { format } from "date-fns";
 
 type Reminder = {
@@ -37,7 +37,7 @@ const RemindersModal: React.FC<RemindersModalProps> = ({ user, onClose }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axiosInstance
+    api
       .get(`/reminders/user/${user._id}`)
       .then((res) => setReminders(res.data))
       .catch((err) => console.error("Error fetching reminders:", err))
