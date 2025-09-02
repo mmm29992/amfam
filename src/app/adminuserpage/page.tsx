@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 import DynamicHeader from "../components/Header/DynamicHeader";
 import InfoModal from "../components/InfoModal";
 import RemindersModal from "../components/UserRemindersModal"; // ⬅️ add this if not already
@@ -44,11 +44,11 @@ export default function AdminUsersPage() {
   useEffect(() => {
     const fetchCurrentUserAndUsers = async () => {
       try {
-        const userRes = await axiosInstance.get("/auth/me");
+        const userRes = await api.get("/auth/me");
         const me = userRes.data.user;
         setCurrentUser(me);
 
-        const usersRes = await axiosInstance.get("/auth/users");
+        const usersRes = await api.get("/auth/users");
         const allUsers = usersRes.data;
 
         // 🔍 If employee, show only clients
@@ -71,7 +71,7 @@ export default function AdminUsersPage() {
   const handleDelete = async (userId: string) => {
     try {
       console.log("Attempting delete...");
-      await axiosInstance.delete(`/auth/users/${userId}`, {
+      await api.delete(`/auth/users/${userId}`, {
         data: { adminCode },
       });
 
@@ -80,7 +80,7 @@ export default function AdminUsersPage() {
       setShowDeleteModal(null);
       setAdminCode(""); // ✅ after success
 
-      const refreshed = await axiosInstance.get("/auth/users");
+      const refreshed = await api.get("/auth/users");
       console.log("Users refreshed");
       setUsers(refreshed.data);
     } catch (err: unknown) {
