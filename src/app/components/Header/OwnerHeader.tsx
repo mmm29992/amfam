@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import axiosInstance from "../../axiosInstance";
+import api from "@/lib/api"; 
 
 export default function EmployeeHeader() {
   const router = useRouter();
@@ -15,7 +15,7 @@ export default function EmployeeHeader() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axiosInstance.get("/auth/me");
+        const res = await api.get("/auth/me");
         setUser(res.data.user);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
@@ -27,7 +27,7 @@ export default function EmployeeHeader() {
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
+      await api.post("/auth/logout");
       window.location.href = "/";
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
