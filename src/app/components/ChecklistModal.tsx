@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axiosInstance from "../axiosInstance";
+import api from "@/lib/api";
 
 type ChecklistItem = {
   _id: string;
@@ -75,7 +75,7 @@ const ChecklistModal: React.FC<ChecklistModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      await axiosInstance.post("/checklist", {
+      await api.post("/checklist", {
         text: cleanText,
         deadline: deadline ? new Date(deadline).toISOString() : undefined,
         category,
@@ -83,7 +83,7 @@ const ChecklistModal: React.FC<ChecklistModalProps> = ({
       });
       
 
-      const res = await axiosInstance.get("/checklist/me");
+      const res = await api.get("/checklist/me");
       onSuccess(res.data);
       onClose();
     } catch (err) {
