@@ -6,10 +6,23 @@ const OwnerCode = require("../models/OwnerCode");
 const authenticateToken = require("../middleware/authMiddleware");
 const EmployeeCode = require("../models/EmployeeCode");
 const VerificationCode = require("../models/VerificationCode");
-const nodemailer = require("nodemailer");
-const crypto = require("crypto");
-const transporter = require("../utils/emailTransporter"); // Already used above
+const crypto = require("crypto")
 const router = express.Router();
+
+const createTransporter = require("../utils/emailTransporter"); // factory
+const mailer = createTransporter(
+  (process.env.EMAIL_PROVIDER || "gmail").toLowerCase(),
+  process.env.EMAIL_USER,
+  process.env.EMAIL_PASS
+);
+
+// Optional: see SMTP status in Render logs at boot
+mailer
+  .verify()
+  .then(() =>
+    console.log("📧 SMTP ready:", process.env.EMAIL_PROVIDER || "gmail")
+  )
+  .catch((e) => console.error("❌ SMTP verify failed:", e?.message || e));
 
 
 router.post("/request-password-reset", async (req, res) => {
@@ -46,7 +59,7 @@ If you didn’t request this reset, please contact us immediately.
 – The Support Team
     `;
 
-    await transporter.sendMail({
+    await mailer.sendMail({
       from: `"Support" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your Temporary Password",
@@ -62,8 +75,6 @@ If you didn’t request this reset, please contact us immediately.
     return res.status(500).json({ message: "Server error." });
   }
 });
-
-
 
 // Helper: Generate and send token in HTTP-only cookie
 const sendTokenCookie = (res, user) => {
@@ -343,9 +354,7 @@ router.post("/update-profile", authenticateToken, async (req, res) => {
     if (newUsername && newUsername !== user.username) {
       const usernameTaken = await User.findOne({ username: newUsername });
       if (usernameTaken) {
-        return res
-          .status(400)
-          .json({ message: "Username already taken." });
+        return res.status(400).json({ message: "Username already taken." });
       }
       user.username = newUsername;
     }
@@ -353,9 +362,7 @@ router.post("/update-profile", authenticateToken, async (req, res) => {
     if (newEmail && newEmail !== user.email) {
       const emailTaken = await User.findOne({ email: newEmail });
       if (emailTaken) {
-        return res
-          .status(400)
-          .json({ message: "Email already in use." });
+        return res.status(400).json({ message: "Email already in use." });
       }
       user.email = newEmail;
     }
@@ -371,7 +378,6 @@ router.post("/update-profile", authenticateToken, async (req, res) => {
       .json({ message: err?.message || "Failed to update profile." });
   }
 });
-
 
 // Delete account
 router.post("/delete-account", authenticateToken, async (req, res) => {
@@ -538,17 +544,30 @@ router.post("/start-registration", async (req, res) => {
     { upsert: true, new: true }
   );
 
-  const transporter = require("../utils/emailTransporter");
+  
 
-  await transporter.sendMail({
-    from: `"Verify your account" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "Your Verification Code",
-    text: `Your verification code is: ${code}`,
-  });
-  console.log(`✅ Verification code sent to ${email}`);
-
-  res.status(200).json({ message: "Verification code sent to email." });
+  try {
+    await mailer.sendMail({
+      from: `"Verify your account" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Verification Code",
+      text: `Your verification code is: ${code}`,
+      // html: `<p>Your verification code is <b>${code}</b>.</p>` // optional
+    });
+    console.log(`✅ Verification code sent to ${email}`);
+    return res
+      .status(200)
+      .json({ message: "Verification code sent to email." });
+  } catch (e) {
+    console.error("sendMail ERROR:", {
+      name: e?.name,
+      code: e?.code,
+      command: e?.command,
+      response: e?.response && e.response.toString().slice(0, 200),
+      message: e?.message,
+    });
+    return res.status(500).json({ message: "Email failed" });
+  }
 });
 
 router.post("/verify-email-code", async (req, res) => {
@@ -650,7 +669,6 @@ router.get("/clients", authenticateToken, async (req, res) => {
   }
 });
 
-
 router.get("/users", authenticateToken, async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -712,7 +730,5 @@ router.post("/view-password", async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
-
-
 
 module.exports = router;
