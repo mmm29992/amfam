@@ -70,7 +70,6 @@ export default function ReminderModal({
   );
 
   const parsedScheduled = parseDatetimeLocalStrict(timeInput);
-  const isPastDue = parsedScheduled ? parsedScheduled < new Date() : false;
 
   useEffect(() => {
     if (reminder) {
