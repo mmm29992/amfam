@@ -29,6 +29,16 @@ const safeParseDate = (s: string) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
+// ADD: strict parser for <input type="datetime-local"> values
+const parseDatetimeLocalStrict = (s: string): Date | null => {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return null;
+  const [date, time] = s.split("T");
+  const [Y, M, D] = date.split("-").map(Number);
+  const [h, m] = time.split(":").map(Number);
+  const d = new Date(Y, M - 1, D, h, m, 0, 0);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
 export default function ReminderModal({
   reminder,
   isCreating,
@@ -51,8 +61,15 @@ export default function ReminderModal({
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
   const [targetOption, setTargetOption] = useState<"self" | "client">("self");
-  // Replace your isPastDue line with a safe version:
-  const parsedScheduled = safeParseDate(formState.scheduledTime);
+  // ADD: stable min once the modal opens, and a separate input string
+  const [minTime] = useState(() =>
+    toDatetimeLocal(new Date(Date.now() + 60_000))
+  );
+  const [timeInput, setTimeInput] = useState<string>(() =>
+    toDatetimeLocal(new Date(Date.now() + 5 * 60 * 1000))
+  );
+
+  const parsedScheduled = parseDatetimeLocalStrict(timeInput);
   const isPastDue = parsedScheduled ? parsedScheduled < new Date() : false;
 
   useEffect(() => {
@@ -62,6 +79,8 @@ export default function ReminderModal({
         emailSubject: reminder.emailSubject || `Reminder: ${reminder.title}`,
         message: reminder.message || "",
       });
+      const d = safeParseDate(reminder.scheduledTime);
+      if (d) setTimeInput(toDatetimeLocal(d));
     } else {
       const initialTemplate = `Hi there,
 
@@ -83,6 +102,7 @@ Stay on top of things!`;
         category: "",
         subcategory: "",
       });
+      setTimeInput(toDatetimeLocal(new Date(Date.now() + 5 * 60 * 1000)));
 
       if (userType === "client") setTargetOption("self");
     }
@@ -106,12 +126,18 @@ Stay on top of things!`;
     >
   ) => {
     const { name, value } = e.target;
+
+    // NEW: datetime-local should update the raw input string and mirror to formState
+    if (name === "scheduledTime") {
+      setTimeInput(value); // do not parse while typing
+      setFormState((prev) => ({ ...prev, scheduledTime: value }));
+      return;
+    }
+
     setFormState((prev: Reminder) => {
       const updated = { ...prev, [name]: value };
-
       if (name === "emailSubject") updated.title = value;
       if (name === "title") updated.emailSubject = value;
-
       return updated;
     });
   };
@@ -123,19 +149,8 @@ Stay on top of things!`;
 
       // Convert whatever is in scheduledTime into a proper ISO string for the backend
       const scheduleDate =
-        safeParseDate(formState.scheduledTime) ??
-        // if user typed a datetime-local string, try to parse it as local
-        (() => {
-          const s = formState.scheduledTime;
-          // expect "YYYY-MM-DDTHH:MM"
-          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) {
-            const [date, time] = s.split("T");
-            const [Y, M, D] = date.split("-").map(Number);
-            const [h, m] = time.split(":").map(Number);
-            return new Date(Y, M - 1, D, h, m, 0, 0);
-          }
-          return null;
-        })();
+        parseDatetimeLocalStrict(timeInput) ??
+        safeParseDate(formState.scheduledTime);
 
       if (!scheduleDate || scheduleDate <= new Date()) {
         // you can also surface a toast here
@@ -240,7 +255,7 @@ Stay on top of things!`;
 
               <hr className="my-2" />
               <label className="block font-semibold mb-1">Subject:</label>
-              {(isEditing || isCreating) && !isPastDue ? (
+              {isEditing || isCreating ? (
                 <input
                   type="text"
                   name="emailSubject"
@@ -254,7 +269,7 @@ Stay on top of things!`;
                 </div>
               )}
               <label className="block font-semibold mb-1">Body:</label>
-              {(isEditing || isCreating) && !isPastDue ? (
+              {isEditing || isCreating ? (
                 <textarea
                   name="message"
                   value={formState.message}
@@ -325,7 +340,7 @@ Stay on top of things!`;
 
               <div>
                 <label className="block font-semibold">Title:</label>
-                {(isEditing || isCreating) && !isPastDue ? (
+                {isEditing || isCreating ? (
                   <input
                     type="text"
                     name="title"
@@ -342,7 +357,7 @@ Stay on top of things!`;
 
               <div>
                 <label className="block font-semibold">Message:</label>
-                {(isEditing || isCreating) && !isPastDue ? (
+                {isEditing || isCreating ? (
                   <textarea
                     name="message"
                     value={formState.message}
@@ -358,17 +373,13 @@ Stay on top of things!`;
 
               <div>
                 <label className="block font-semibold">Scheduled Time:</label>
-                {(isEditing || isCreating) && !isPastDue ? (
+                {isEditing || isCreating ? (
                   <input
                     type="datetime-local"
                     name="scheduledTime"
-                    value={
-                      parsedScheduled
-                        ? toDatetimeLocal(parsedScheduled)
-                        : formState.scheduledTime.slice(0, 16)
-                    }
+                    value={timeInput} // REPLACED: bind to the raw string
                     onChange={handleChange}
-                    min={toDatetimeLocal(new Date(Date.now() + 60_000))}
+                    min={minTime} // REPLACED: stable min captured at open
                     step={60}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") e.preventDefault();
@@ -419,7 +430,7 @@ Stay on top of things!`;
 
           {/* Buttons */}
           <div className="mt-6 flex justify-end gap-4">
-            {(isEditing || isCreating) && !isPastDue ? (
+            {isEditing || isCreating ? (
               <>
                 {!isCreating && (
                   <button
@@ -437,14 +448,12 @@ Stay on top of things!`;
                 </button>
               </>
             ) : (
-              !isPastDue && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-                >
-                  Edit
-                </button>
-              )
+              <button
+                onClick={() => setIsEditing(true)}
+                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+              >
+                Edit
+              </button>
             )}
           </div>
         </div>
