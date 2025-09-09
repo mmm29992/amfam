@@ -17,6 +17,18 @@ type Client = {
   email: string;
 };
 
+// Add these helpers at the top of the file (below imports)
+const pad = (n: number) => String(n).padStart(2, "0");
+const toDatetimeLocal = (d: Date) =>
+  `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
+
+const safeParseDate = (s: string) => {
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
 export default function ReminderModal({
   reminder,
   isCreating,
@@ -39,7 +51,9 @@ export default function ReminderModal({
   const [isEditing, setIsEditing] = useState(false);
   const [clientOptions, setClientOptions] = useState<string[]>([]);
   const [targetOption, setTargetOption] = useState<"self" | "client">("self");
-  const isPastDue = new Date(formState.scheduledTime) < new Date();
+  // Replace your isPastDue line with a safe version:
+  const parsedScheduled = safeParseDate(formState.scheduledTime);
+  const isPastDue = parsedScheduled ? parsedScheduled < new Date() : false;
 
   useEffect(() => {
     if (reminder) {
@@ -102,20 +116,33 @@ Stay on top of things!`;
     });
   };
 
+  // In handleFinalSubmit, avoid mutating state; compute payload-only values:
   const handleFinalSubmit = async () => {
     try {
       const isClient = userType === "client";
-      // 🔧 Ensure client reminders always use their own email
-      if (isClient) {
-        formState.targetEmail = userEmail;
+
+      // Convert whatever is in scheduledTime into a proper ISO string for the backend
+      const scheduleDate =
+        safeParseDate(formState.scheduledTime) ??
+        // if user typed a datetime-local string, try to parse it as local
+        (() => {
+          const s = formState.scheduledTime;
+          // expect "YYYY-MM-DDTHH:MM"
+          if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) {
+            const [date, time] = s.split("T");
+            const [Y, M, D] = date.split("-").map(Number);
+            const [h, m] = time.split(":").map(Number);
+            return new Date(Y, M - 1, D, h, m, 0, 0);
+          }
+          return null;
+        })();
+
+      if (!scheduleDate || scheduleDate <= new Date()) {
+        // you can also surface a toast here
+        console.error("Pick a valid future time.");
+        return;
       }
 
-      console.log("User Type:", userType);
-      console.log("User Email:", userEmail);
-      console.log("Target Email in form:", formState.targetEmail);
-
-      // Determine if it's a client creating for themselves
-      // or an employee creating for self or another client
       const isForClient =
         userType === "employee" &&
         targetOption === "client" &&
@@ -123,50 +150,24 @@ Stay on top of things!`;
 
       const payload = {
         ...formState,
-        // Target email logic:
-        // - If client: force their own email
-        // - If employee creating for client: use selected email
-        // - If employee creating for themselves: use their own email
+        scheduledTime: scheduleDate.toISOString(), // <-- send ISO to backend
         targetEmail: isClient
           ? userEmail
           : isForClient
           ? formState.targetEmail
           : userEmail,
-
-        // Email content
         emailBody: formState.message,
         emailSubject: formState.emailSubject || `Reminder: ${formState.title}`,
-
-        // Flag for backend to know it's for a client
         forClient: isClient ? true : isForClient,
-
-        // Optional: ensures backend doesn't complain about missing creatorId
-        // Only needed if you're handling creator on frontend (usually you don’t)
-        // creatorId: currentUserId,
       };
 
-      console.log("Final payload:", payload);
-
       if (isCreating) {
-        console.log(
-          "Submitting reminder with targetEmail:",
-          payload.targetEmail
-        );
-
-        console.log(
-          "Submitting reminder with targetEmail:",
-          payload.targetEmail
-        );
-
-        await api.post("/reminders", {
-          ...payload,
-          sendEmail: true,
-        });
+        await api.post("/reminders", { ...payload, sendEmail: true });
       } else {
         await api.put(`/reminders/${formState._id}`, payload);
       }
 
-      if (onSave) onSave();
+      onSave?.();
       onClose();
     } catch (err) {
       console.error("Failed to save reminder:", err);
@@ -229,10 +230,14 @@ Stay on top of things!`;
                   formState.targetEmail || userEmail
                 )}
               </div>
+              {/* In Email Preview, replace the "Scheduled For" rendering: */}
               <p className="mb-2">
                 <strong>Scheduled For:</strong>{" "}
-                {new Date(formState.scheduledTime).toLocaleString()}
+                {parsedScheduled
+                  ? parsedScheduled.toLocaleString()
+                  : "— (set a time)"}
               </p>
+
               <hr className="my-2" />
               <label className="block font-semibold mb-1">Subject:</label>
               {(isEditing || isCreating) && !isPastDue ? (
@@ -357,8 +362,17 @@ Stay on top of things!`;
                   <input
                     type="datetime-local"
                     name="scheduledTime"
-                    value={formState.scheduledTime.slice(0, 16)}
+                    value={
+                      parsedScheduled
+                        ? toDatetimeLocal(parsedScheduled)
+                        : formState.scheduledTime.slice(0, 16)
+                    }
                     onChange={handleChange}
+                    min={toDatetimeLocal(new Date(Date.now() + 60_000))}
+                    step={60}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.preventDefault();
+                    }}
                     className="w-full px-3 py-2 border rounded"
                   />
                 ) : (
