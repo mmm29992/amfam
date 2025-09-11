@@ -25,8 +25,6 @@ const allowedOrigins = ["http://localhost:3000", "https://amfam.vercel.app"];
 const vercelPreviewRegex = /\.vercel\.app$/;
 app.set("trust proxy", 1); // Render proxy
 
-
-
 app.use(
   cors({
     origin(origin, cb) {
@@ -71,7 +69,6 @@ const io = new Server(server, {
 
 app.options("*", cors());
 
-
 const userSocketMap = new Map(); // optional: for private messages if needed
 
 io.on("connection", (socket) => {
@@ -105,10 +102,32 @@ io.on("connection", (socket) => {
 app.set("io", io);
 
 // ───── Cron Jobs ─────
-require("./jobs/sendReminders");
+// require("./jobs/sendReminders");
+const { processDueNow } = require("./internal/processDueNow");
 
-// --- Health check (add ABOVE the 404 middleware) ---
+// --- Health check ---
 app.get("/api/health", (_req, res) => res.status(200).json({ ok: true }));
+
+// ⚠️ Open endpoint (no token). Includes a tiny rate limiter.
+let __lastRunDueAt = 0;
+app.post("/internal/run-due", async (req, res) => {
+  const now = Date.now();
+  // allow at most ~1 call per 25s to avoid spam / accidental loops
+  if (now - __lastRunDueAt < 25_000) {
+    return res.status(429).json({ ok: false, error: "too_soon" });
+  }
+  __lastRunDueAt = now;
+
+  try {
+    const result = await processDueNow();
+    return res.json({ ok: true, ...result });
+  } catch (e) {
+    console.error("run-due error:", e);
+    return res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
+
+
 
 // ───── Fallback/Error Handling ─────
 app.use((req, res) => {
