@@ -34,26 +34,38 @@ function ScriptDetails() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    const fetchScript = async () => {
-      if (!id) {
-        setError("No script ID provided.");
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await api.get(`http://localhost:5001/api/scripts/${id}`, {
-          withCredentials: true,
-        });
-        setScript(res.data);
-      } catch {
-        setError("Failed to load script.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchScript();
-  }, [id]);
+    useEffect(() => {
+      const fetchScript = async () => {
+        if (!id) {
+          setError("No script ID provided.");
+          setLoading(false);
+          return;
+        }
+        try {
+          // ✅ Use the axios instance baseURL; don't hardcode localhost
+          const res = await api.get(`/scripts/${id}`); // api already has withCredentials: true
+          setScript(res.data);
+        } catch (e: any) {
+          // Try to surface 401/403/404 vs generic error
+          const status = e?.response?.status;
+          const msg =
+            e?.response?.data?.message ||
+            e?.message ||
+            "Failed to load script.";
+          if (status === 401 || status === 403) {
+            setError(`Not authorized (${status}). ${msg}`);
+          } else if (status === 404) {
+            setError(`Script not found (${status}).`);
+          } else {
+            setError(`Error (${status ?? "network"}): ${msg}`);
+          }
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchScript();
+    }, [id]);
+
 
   if (loading) return <p>Loading...</p>;
   if (error || !script) return <p>{error || "Script not found."}</p>;
