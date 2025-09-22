@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import ScriptModal from "../ScriptModal";
 import DynamicHeader from "../../components/Header/DynamicHeader";
+// at top if you use axios in this file:
+import type { AxiosError } from "axios";
 
 interface Script {
   _id: string;
@@ -34,38 +36,40 @@ function ScriptDetails() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-    useEffect(() => {
-      const fetchScript = async () => {
-        if (!id) {
-          setError("No script ID provided.");
-          setLoading(false);
-          return;
-        }
-        try {
-          // ✅ Use the axios instance baseURL; don't hardcode localhost
-          const res = await api.get(`/scripts/${id}`); // api already has withCredentials: true
-          setScript(res.data);
-        } catch (e: any) {
-          // Try to surface 401/403/404 vs generic error
-          const status = e?.response?.status;
-          const msg =
-            e?.response?.data?.message ||
-            e?.message ||
-            "Failed to load script.";
-          if (status === 401 || status === 403) {
-            setError(`Not authorized (${status}). ${msg}`);
-          } else if (status === 404) {
-            setError(`Script not found (${status}).`);
-          } else {
-            setError(`Error (${status ?? "network"}): ${msg}`);
-          }
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchScript();
-    }, [id]);
+  useEffect(() => {
+    const fetchScript = async () => {
+      if (!id) {
+        setError("No script ID provided.");
+        setLoading(false);
+        return;
+      }
+      try {
+        // ✅ Use the axios instance baseURL; don't hardcode localhost
+        const res = await api.get(`/scripts/${id}`); // api already has withCredentials: true
+        setScript(res.data);
+      } catch (err: unknown) {
+        // Narrow to AxiosError shape if present
+        const axiosErr = err as AxiosError<{ message?: string }>;
 
+        const status = axiosErr?.response?.status;
+        const msg =
+          axiosErr?.response?.data?.message ??
+          (axiosErr?.message ||
+            (err instanceof Error ? err.message : "Failed to load script."));
+
+        if (status === 401 || status === 403) {
+          setError(`Not authorized (${status}). ${msg}`);
+        } else if (status === 404) {
+          setError(`Script not found (${status}).`);
+        } else {
+          setError(`Error (${status ?? "network"}): ${msg}`);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchScript();
+  }, [id]);
 
   if (loading) return <p>Loading...</p>;
   if (error || !script) return <p>{error || "Script not found."}</p>;
