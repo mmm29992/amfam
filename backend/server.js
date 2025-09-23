@@ -18,25 +18,33 @@ const server = http.createServer(app); // 🧠 Use this instead of app.listen
 const PORT = process.env.PORT || 5001;
 
 // ───── Middleware ─────
-app.use(express.json());
-app.use(cookieParser());
+// ───── Middleware ─────
 
+// ✅ Put trust proxy FIRST so Secure cookies stick behind Render/Proxy
+app.set("trust proxy", 1);
+
+// 🔁 Reusable CORS options (same logic for app, OPTIONS, and Socket.io)
 const allowedOrigins = ["http://localhost:3000", "https://amfam.vercel.app"];
 const vercelPreviewRegex = /\.vercel\.app$/;
-app.set("trust proxy", 1); // Render proxy
 
-app.use(
-  cors({
-    origin(origin, cb) {
-      if (!origin) return cb(null, true); // curl/Postman or server-to-server
-      if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
-        return cb(null, true);
-      }
-      return cb(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true); // curl/Postman or server-to-server
+    if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
+      return cb(null, true);
+    }
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+};
+
+// ✅ Apply CORS BEFORE parsers, and mirror it for preflights
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+app.use(cookieParser());
+app.use(express.json());
+
 
 // ───── Routes ─────
 app.use("/api/auth", authRoutes);
@@ -55,19 +63,12 @@ mongoose
 // ───── Socket.io Setup ─────
 const io = new Server(server, {
   cors: {
-    origin(origin, cb) {
-      if (!origin) return cb(null, true);
-      if (allowedOrigins.includes(origin) || vercelPreviewRegex.test(origin)) {
-        return cb(null, true);
-      }
-      return cb(new Error(`Socket.io CORS blocked for origin: ${origin}`));
-    },
+    ...corsOptions, // ✅ reuse the same policy as the app
     methods: ["GET", "POST", "PATCH"],
-    credentials: true,
   },
 });
 
-app.options("*", cors());
+
 
 const userSocketMap = new Map(); // optional: for private messages if needed
 
@@ -79,16 +80,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joinConversation", (convoId) => {
-    socket.join(convoId);
+    socket.join(`convo:${convoId}`);
   });
 
   socket.on("sendMessage", ({ convoId, message }) => {
-    io.to(convoId).emit("receiveMessage", message);
+    io.to(`convo:${convoId}`).emit("receiveMessage", message);
   });
 
   socket.on("typing", ({ convoId, userId, isTyping }) => {
-    socket.to(convoId).emit("typingStatus", { userId, isTyping });
+    socket.to(`convo:${convoId}`).emit("typingStatus", { userId, isTyping });
   });
+
 
   socket.on("disconnect", () => {
     console.log("⚠️ Socket disconnected:", socket.id);

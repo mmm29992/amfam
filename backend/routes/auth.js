@@ -6,7 +6,7 @@ const OwnerCode = require("../models/OwnerCode");
 const authenticateToken = require("../middleware/authMiddleware");
 const EmployeeCode = require("../models/EmployeeCode");
 const VerificationCode = require("../models/VerificationCode");
-const crypto = require("crypto")
+const crypto = require("crypto");
 const router = express.Router();
 
 const createTransporter = require("../utils/emailTransporter"); // factory
@@ -23,7 +23,6 @@ mailer
     console.log("📧 SMTP ready:", process.env.EMAIL_PROVIDER || "gmail")
   )
   .catch((e) => console.error("❌ SMTP verify failed:", e?.message || e));
-
 
 router.post("/request-password-reset", async (req, res) => {
   const { email } = req.body;
@@ -77,20 +76,29 @@ If you didn’t request this reset, please contact us immediately.
 });
 
 // Helper: Generate and send token in HTTP-only cookie
-const sendTokenCookie = (res, user) => {
-  const token = jwt.sign(
-    { userId: user._id, userType: user.userType },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+// --- Cookie helpers (cross-site safe in prod: Vercel <-> Render) ---
+const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-  res.cookie("token", token, {
+function cookieOptions() {
+  const prod = process.env.NODE_ENV === "production";
+  return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-    maxAge: 60 * 60 * 1000, // 1 hour
-  });
+    secure: prod, // must be true in prod (HTTPS)
+    sameSite: prod ? "none" : "lax", // cross-site in prod, dev-friendly locally
+    path: "/",
+    maxAge: ONE_WEEK,
+  };
+}
 
+// Helper: Generate and send token in HTTP-only cookie
+const sendTokenCookie = (res, user) => {
+  // Use 'sub' per JWT standard; middleware will map to req.user.userId
+  const token = jwt.sign(
+    { sub: String(user._id), userType: user.userType },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+  res.cookie("token", token, cookieOptions());
   return token;
 };
 
@@ -299,11 +307,7 @@ router.get("/me", authenticateToken, async (req, res) => {
 
 // Logout
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-  });
+  res.clearCookie("token", cookieOptions()); // must match set options
   res.status(200).json({ message: "Logged out successfully" });
 });
 
@@ -411,7 +415,7 @@ router.post("/delete-account", authenticateToken, async (req, res) => {
     user.deleted = true;
     await user.save();
 
-    res.clearCookie("token");
+    res.clearCookie("token", cookieOptions());
     return res.status(200).json({ message: "Account deactivated." });
   } catch (err) {
     console.error("Account deletion failed:", err);
@@ -543,8 +547,6 @@ router.post("/start-registration", async (req, res) => {
     { code, expiresAt },
     { upsert: true, new: true }
   );
-
-  
 
   try {
     await mailer.sendMail({
