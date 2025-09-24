@@ -65,10 +65,7 @@ export default function ChatPage() {
 
     const payload = { message: newMsg };
 
-    await api.post(
-      `/conversations/convo/${convo._id}/message`,
-      payload
-    );
+    await api.post(`/conversations/convo/${convo._id}/message`, payload);
     const res = await api.get("/conversations/all");
     setConvos(res.data);
 
@@ -121,18 +118,23 @@ export default function ChatPage() {
   useEffect(() => {
     if (!currentUserId) return;
 
-    const handleNewMessage = () => {
-      api
-        .get("/conversations/all")
-        .then((res) => setConvos(res.data));
+    const handleReceive = () => {
+      api.get("/conversations/all").then((res) => setConvos(res.data));
     };
 
-    socket.on("newMessage", handleNewMessage);
+    socket.on("receiveMessage", handleReceive);
 
     return () => {
-      socket.off("newMessage", handleNewMessage);
+      socket.off("receiveMessage", handleReceive);
     };
   }, [currentUserId]);
+
+
+  // Join the socket room whenever the active convo changes
+  useEffect(() => {
+    if (!convo?._id) return;
+    socket.emit("joinConversation", convo._id);
+  }, [convo?._id]);
 
   // ✅ Place this helper function HERE:
   const getConvoForClient = (clientId: string) => {
@@ -325,9 +327,7 @@ export default function ChatPage() {
                             await api.patch(
                               `/conversations/convo/${convo._id}/assign`
                             );
-                            const res = await api.get(
-                              "/conversations/all"
-                            );
+                            const res = await api.get("/conversations/all");
                             setConvos(res.data);
                             const updatedConvo = await api.get(
                               `/conversations/convo/${convo._id}`
@@ -345,9 +345,7 @@ export default function ChatPage() {
                             await api.patch(
                               `/conversations/convo/${convo._id}/unassign`
                             );
-                            const res = await api.get(
-                              "/conversations/all"
-                            );
+                            const res = await api.get("/conversations/all");
                             setConvos(res.data);
                             const updatedConvo = await api.get(
                               `/conversations/convo/${convo._id}`

@@ -9,12 +9,13 @@ type Message = {
   isSystem: boolean;
   seenBy?: string[];
   timestamp: string;
+  convoId?: string; // ✅ optional: helps us filter/append safely
 };
+
 type TypingStatusPayload = {
   userId: string;
   isTyping: boolean;
 };
-
 
 type Conversation = {
   _id: string;
@@ -70,19 +71,50 @@ export default function ChatBox({
   }, [messages]);
 
   useEffect(() => {
-    socket.on("receiveMessage", (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+    if (!convo?._id) return;
 
-socket.on("typingStatus", ({ userId, isTyping }: TypingStatusPayload) => {
-  if (userId !== currentUserId) setIsTyping(isTyping);
-});
+    const onReceive = (payload: any) => {
+      // Accept either shape:
+      // 1) { convoId, message: { message, senderId } }
+      // 2) { convoId, text, senderId }
+      // 3) legacy: { message, senderId } (no convoId)
+
+      const incomingConvoId = payload?.convoId;
+      // If the server includes convoId, ignore messages for other rooms
+      if (incomingConvoId && incomingConvoId !== convo._id) return;
+
+      const text =
+        payload?.text ?? payload?.message?.message ?? payload?.message ?? "";
+
+      const senderId = payload?.senderId ?? payload?.message?.senderId ?? "";
+
+      if (!text) return;
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          senderId,
+          message: text,
+          isSystem: false,
+          timestamp: new Date().toISOString(),
+          convoId: incomingConvoId ?? convo._id,
+        },
+      ]);
+    };
+
+    const onTyping = ({ userId, isTyping }: TypingStatusPayload) => {
+      if (userId !== currentUserId) setIsTyping(isTyping);
+    };
+
+    socket.on("receiveMessage", onReceive);
+    socket.on("typingStatus", onTyping);
 
     return () => {
-      socket.off("receiveMessage");
-      socket.off("typingStatus");
+      socket.off("receiveMessage", onReceive);
+      socket.off("typingStatus", onTyping);
     };
-  }, [currentUserId]);
+  }, [convo?._id, currentUserId]);
+
 
   return (
     <div className={`flex flex-col flex-1 ${className}`}>

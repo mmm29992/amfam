@@ -39,6 +39,19 @@ export default function ClientMessagingPage() {
     loadClientData();
   }, []);
 
+  useEffect(() => {
+    const onReceive = (payload: any) => {
+      if (payload?.convoId !== convoId) return; // only the active convo
+      scrollToBottom(); // keep the chat pinned
+    };
+
+    socket.on("receiveMessage", onReceive);
+    return () => {
+      socket.off("receiveMessage", onReceive);
+    };
+  }, [convoId]);
+
+
   const handleSend = async () => {
     if (!newMsg.trim() || !convoId || !currentUserId) return;
 
