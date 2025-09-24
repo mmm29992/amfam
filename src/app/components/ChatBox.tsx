@@ -12,6 +12,14 @@ type Message = {
   convoId?: string; // ✅ optional: helps us filter/append safely
 };
 
+type ReceivePayload = {
+  convoId?: string;
+  message?: { message?: string; text?: string; senderId?: string };
+  text?: string;
+  senderId?: string;
+};
+
+
 type TypingStatusPayload = {
   userId: string;
   isTyping: boolean;
@@ -57,14 +65,16 @@ export default function ChatBox({
         socket.emit("register", currentUserId);
         socket.emit("joinConversation", res.data._id);
         onConvoLoaded(res.data);
-        scrollToBottom("auto"); // ✅ instant on load
+        scrollToBottom("auto");
       } catch (err) {
         console.error("Failed to fetch convo:", err);
       }
     };
 
-    fetchConvo();
-  }, [clientId]);
+    if (clientId) fetchConvo();
+    // deps: include everything we read inside
+  }, [clientId, currentUserId, onConvoLoaded]);
+
 
   useEffect(() => {
     scrollToBottom(); // ✅ smooth scroll on new messages
@@ -73,18 +83,15 @@ export default function ChatBox({
   useEffect(() => {
     if (!convo?._id) return;
 
-    const onReceive = (payload: any) => {
-      // Accept either shape:
-      // 1) { convoId, message: { message, senderId } }
-      // 2) { convoId, text, senderId }
-      // 3) legacy: { message, senderId } (no convoId)
-
+    const onReceive = (payload: ReceivePayload) => {
       const incomingConvoId = payload?.convoId;
-      // If the server includes convoId, ignore messages for other rooms
       if (incomingConvoId && incomingConvoId !== convo._id) return;
 
       const text =
-        payload?.text ?? payload?.message?.message ?? payload?.message ?? "";
+        payload?.text ??
+        payload?.message?.message ??
+        payload?.message?.text ??
+        "";
 
       const senderId = payload?.senderId ?? payload?.message?.senderId ?? "";
 

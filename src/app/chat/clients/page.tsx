@@ -6,6 +6,14 @@ import socket from "@/socket";
 import DynamicHeader from "../../components/Header/DynamicHeader";
 import ChatBox from "../../components/ChatBox";
 
+type ReceivePayload = {
+  convoId?: string;
+  message?: { message?: string; text?: string; senderId?: string };
+  text?: string;
+  senderId?: string;
+};
+
+
 export default function ClientMessagingPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [convoId, setConvoId] = useState<string | null>(null);
@@ -40,9 +48,9 @@ export default function ClientMessagingPage() {
   }, []);
 
   useEffect(() => {
-    const onReceive = (payload: any) => {
-      if (payload?.convoId !== convoId) return; // only the active convo
-      scrollToBottom(); // keep the chat pinned
+    const onReceive = (payload: ReceivePayload) => {
+      if (payload?.convoId !== convoId) return;
+      scrollToBottom();
     };
 
     socket.on("receiveMessage", onReceive);
@@ -50,6 +58,7 @@ export default function ClientMessagingPage() {
       socket.off("receiveMessage", onReceive);
     };
   }, [convoId]);
+
 
 
   const handleSend = async () => {
