@@ -97,6 +97,13 @@ export default function EmployeeHeader() {
             >
               Quotes
             </button>
+            {/* ✅ New: Policies */}
+            <button
+              onClick={() => router.push("/policies")}
+              className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+            >
+              Policies
+            </button>
             <button
               onClick={() => router.push("/adminuserpage")}
               className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
@@ -117,7 +124,7 @@ export default function EmployeeHeader() {
           {/* Right: Message Button */}
           <div className="flex space-x-4 items-center z-10">
             <button
-              onClick={() => router.push("/chat")} // Change if your chat page is different
+              onClick={() => router.push("/chat")}
               className="flex items-center text-white bg-blue-800 hover:bg-blue-700 px-6 py-6 rounded-md font-extrabold"
             >
               <img

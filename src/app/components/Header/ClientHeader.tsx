@@ -87,6 +87,13 @@ export default function ClientHeader() {
           >
             My Quotes
           </button>
+          {/* ✅ New: My Policies */}
+          <button
+            onClick={() => router.push("/policies/clients")}
+            className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+          >
+            My Policies
+          </button>
         </div>
 
         {/* Center Logo */}

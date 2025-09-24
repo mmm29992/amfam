@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import api from "@/lib/api"; 
+import api from "@/lib/api";
 
 export default function EmployeeHeader() {
   const router = useRouter();
@@ -92,6 +92,13 @@ export default function EmployeeHeader() {
               className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
             >
               Quotes
+            </button>
+            {/* ✅ New Policies button */}
+            <button
+              onClick={() => router.push("/policies")}
+              className="text-blue-800 font-extrabold hover:bg-blue-100 px-4 py-2 rounded"
+            >
+              Policies
             </button>
             <button
               onClick={() => router.push("/adminuserpage")}
