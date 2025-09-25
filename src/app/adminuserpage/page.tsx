@@ -356,13 +356,6 @@ export default function AdminUsersPage() {
             {policiesModal && (
               <PoliciesModal
                 user={policiesModal.user}
-                currentUserType={
-                  currentUser?.userType === "client" ||
-                  currentUser?.userType === "employee" ||
-                  currentUser?.userType === "owner"
-                    ? currentUser.userType
-                    : "employee" // fallback
-                }
                 onClose={() => setPoliciesModal(null)}
               />
             )}
