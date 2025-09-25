@@ -1,126 +1,109 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import DynamicHeader from "../components/Header/DynamicHeader";
-import PolicyModal from "../components/PolicyModal"
+import PolicyModal from "../components/PolicyModal";
 
-type PersonRef = {
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  email?: string;
-  _id?: string;
-};
-
-export type Policy = {
+type Policy = {
   _id: string;
   policyFileUrl: string;
-  notes?: string; // staff-only (server hides for clients)
+  notes?: string;
   createdAt: string;
-  policyType:
-    | "Auto"
-    | "Home"
-    | "Life"
-    | "Renters"
-    | "Business"
-    | "Other"
-    | string;
-  uploadedBy?: PersonRef;
-  clientId?: PersonRef;
+  policyType: string;
+  uploadedBy?: {
+    firstName?: string;
+    lastName?: string;
+    username: string;
+  };
+  clientId?: {
+    firstName?: string;
+    lastName?: string;
+    email: string;
+  };
 };
-
-type SearchField =
-  | "all"
-  | "uploadedBy"
-  | "client"
-  | "policyType"
-  | "notes"
-  | "date";
 
 export default function PoliciesPage() {
   const [policies, setPolicies] = useState<Policy[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<SearchField>("all");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-
-  const fetchPolicies = async (params?: Record<string, string>) => {
-    setLoading(true);
-    try {
-      const res = await api.get<Policy[]>("/policies", { params });
-      setPolicies(res.data ?? []);
-    } catch (err) {
-      console.error("Failed to fetch policies:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   useEffect(() => {
+    const fetchPolicies = async () => {
+      try {
+        const res = await api.get("/policies");
+        setPolicies(res.data);
+      } catch (err) {
+        console.error("Failed to fetch policies:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchPolicies();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredPolicies = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+  const filteredPolicies = policies.filter((p) => {
+    const term = searchTerm.toLowerCase();
+    const matchesType = typeFilter === "all" || p.policyType === typeFilter;
 
-    return policies.filter((p) => {
-      const matchesType = typeFilter === "all" || p.policyType === typeFilter;
+    let matchesSearch = false;
 
-      let matchesSearch = false;
-      switch (searchQuery) {
-        case "uploadedBy": {
-          const hay = `${p.uploadedBy?.username ?? ""} ${
-            p.uploadedBy?.firstName ?? ""
-          } ${p.uploadedBy?.lastName ?? ""}`.toLowerCase();
-          matchesSearch = hay.includes(term);
-          break;
-        }
-        case "client": {
-          const hay = `${p.clientId?.email ?? ""} ${
-            p.clientId?.firstName ?? ""
-          } ${p.clientId?.lastName ?? ""}`.toLowerCase();
-          matchesSearch = hay.includes(term);
-          break;
-        }
-        case "policyType":
-          matchesSearch = (p.policyType ?? "").toLowerCase().includes(term);
-          break;
-        case "notes":
-          matchesSearch = (p.notes ?? "").toLowerCase().includes(term);
-          break;
-        case "date":
-          matchesSearch = new Date(p.createdAt)
+    switch (searchQuery) {
+      case "uploadedBy":
+        matchesSearch = !!(
+          p.uploadedBy?.username?.toLowerCase().includes(term) ||
+          p.uploadedBy?.firstName?.toLowerCase().includes(term) ||
+          p.uploadedBy?.lastName?.toLowerCase().includes(term)
+        );
+        break;
+
+      case "client":
+        matchesSearch = !!(
+          p.clientId?.email?.toLowerCase().includes(term) ||
+          p.clientId?.firstName?.toLowerCase().includes(term) ||
+          p.clientId?.lastName?.toLowerCase().includes(term)
+        );
+        break;
+
+      case "policyType":
+        matchesSearch = !!p.policyType?.toLowerCase().includes(term);
+        break;
+
+      case "notes":
+        matchesSearch = !!p.notes?.toLowerCase().includes(term);
+        break;
+
+      case "date":
+        matchesSearch = !!new Date(p.createdAt)
+          .toLocaleDateString()
+          .toLowerCase()
+          .includes(term);
+        break;
+
+      case "all":
+      default:
+        matchesSearch = !!(
+          p.notes?.toLowerCase().includes(term) ||
+          p.policyType?.toLowerCase().includes(term) ||
+          p.uploadedBy?.username?.toLowerCase().includes(term) ||
+          p.uploadedBy?.firstName?.toLowerCase().includes(term) ||
+          p.uploadedBy?.lastName?.toLowerCase().includes(term) ||
+          p.clientId?.email?.toLowerCase().includes(term) ||
+          p.clientId?.firstName?.toLowerCase().includes(term) ||
+          p.clientId?.lastName?.toLowerCase().includes(term) ||
+          new Date(p.createdAt)
             .toLocaleDateString()
             .toLowerCase()
-            .includes(term);
-          break;
-        case "all":
-        default: {
-          const hay = [
-            p.notes ?? "",
-            p.policyType ?? "",
-            p.uploadedBy?.username ?? "",
-            p.uploadedBy?.firstName ?? "",
-            p.uploadedBy?.lastName ?? "",
-            p.clientId?.email ?? "",
-            p.clientId?.firstName ?? "",
-            p.clientId?.lastName ?? "",
-            new Date(p.createdAt).toLocaleDateString(),
-          ]
-            .join(" ")
-            .toLowerCase();
+            .includes(term)
+        );
+        break;
+    }
 
-          matchesSearch = hay.includes(term);
-          break;
-        }
-      }
-
-      return matchesType && (term ? matchesSearch : true);
-    });
-  }, [policies, searchQuery, searchTerm, typeFilter]);
+    return matchesType && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-blue-800 text-white">
@@ -138,12 +121,11 @@ export default function PoliciesPage() {
 
         <div className="flex items-center justify-between mb-6">
           <div className="flex space-x-2 w-full">
-            {/* 🔎 Search input */}
             <div className="relative w-full">
               <img
                 src="/searchicon.svg"
                 alt="Search Icon"
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4"
               />
               <input
                 type="text"
@@ -154,7 +136,6 @@ export default function PoliciesPage() {
               />
             </div>
 
-            {/* 🗂️ Type filter */}
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
@@ -169,10 +150,9 @@ export default function PoliciesPage() {
               <option value="Other">Other</option>
             </select>
 
-            {/* 🔎 Field selector */}
             <select
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value as SearchField)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="text-blue-700 px-3 py-2 rounded-md border bg-white border-gray-300"
             >
               <option value="all">All Fields</option>
@@ -203,8 +183,7 @@ export default function PoliciesPage() {
                 {p.uploadedBy ? (
                   <p className="text-sm italic text-gray-600 mb-1">
                     Uploaded by: {p.uploadedBy.firstName || ""}{" "}
-                    {p.uploadedBy.lastName || ""}{" "}
-                    {p.uploadedBy.username ? `(${p.uploadedBy.username})` : ""}
+                    {p.uploadedBy.lastName || ""} ({p.uploadedBy.username})
                   </p>
                 ) : (
                   <p className="text-sm italic text-gray-400 mb-1">
@@ -271,7 +250,10 @@ export default function PoliciesPage() {
           <PolicyModal
             onClose={() => setShowModal(false)}
             onSuccess={() => {
-              fetchPolicies().then(() => setShowModal(false));
+              api.get("/policies").then((res) => {
+                setPolicies(res.data);
+                setShowModal(false);
+              });
             }}
           />
         )}
