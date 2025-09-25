@@ -3,14 +3,16 @@ import axios from "axios";
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Prefer NEXT_PUBLIC_API_URL everywhere; append /api here
-const baseURL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "")}/api`
-  : isProd
-  ? "/api" // only works if you have a Next.js rewrite; otherwise the env var will be used
-  : "http://localhost:5001/api";
+const baseURL = (
+  isProd
+    ? "/api" // always same-origin in prod
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api"
+).replace(/\/+$/, "");
 
-const api = axios.create({ baseURL, withCredentials: true });
+const api = axios.create({
+  baseURL,
+  withCredentials: true,
+});
 
 api.interceptors.response.use(
   (res) => res,
