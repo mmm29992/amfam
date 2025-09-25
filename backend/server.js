@@ -12,6 +12,8 @@ const reminderRoutes = require("./routes/reminders");
 const checklistRoutes = require("./routes/checklist");
 const quoteRoutes = require("./routes/quotes");
 const conversationRoutes = require("./routes/conversations"); // 🆕 Your messaging routes
+const policiesRoutes = require("./routes/policies");
+
 
 const app = express();
 const server = http.createServer(app); // 🧠 Use this instead of app.listen
@@ -53,6 +55,8 @@ app.use("/api/reminders", reminderRoutes);
 app.use("/api/checklist", checklistRoutes);
 app.use("/api/quotes", quoteRoutes);
 app.use("/api/conversations", conversationRoutes); // 🆕 Add this
+app.use("/api/policies", policiesRoutes); // ← ADD THIS
+
 
 // ───── MongoDB ─────
 mongoose
