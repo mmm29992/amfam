@@ -9,6 +9,7 @@ import ChecklistModal from "../components/UserChecklistModal";
 import QuotesModal from "../components/UserQuotesModal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PoliciesModal from "../components/UserPoliciesModal";
 
 type User = {
   _id: string;
@@ -38,6 +39,9 @@ export default function AdminUsersPage() {
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [adminCode, setAdminCode] = useState("");
   const [currentUser, setCurrentUser] = useState<{ userType: string } | null>(
+    null
+  );
+  const [policiesModal, setPoliciesModal] = useState<{ user: User } | null>(
     null
   );
 
@@ -305,6 +309,14 @@ export default function AdminUsersPage() {
                       <span className="w-5 text-center">📂</span>{" "}
                       <span>Quotes</span>
                     </button>
+
+                    <button
+                      onClick={() => setPoliciesModal({ user: u })}
+                      className="flex items-center gap-2 hover:underline"
+                    >
+                      <span className="w-5 text-center">📑</span>
+                      <span>Policies</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -339,6 +351,19 @@ export default function AdminUsersPage() {
               <QuotesModal
                 user={quotesModal.user}
                 onClose={() => setQuotesModal(null)}
+              />
+            )}
+            {policiesModal && (
+              <PoliciesModal
+                user={policiesModal.user}
+                currentUserType={
+                  currentUser?.userType === "client" ||
+                  currentUser?.userType === "employee" ||
+                  currentUser?.userType === "owner"
+                    ? currentUser.userType
+                    : "employee" // fallback
+                }
+                onClose={() => setPoliciesModal(null)}
               />
             )}
           </div>
