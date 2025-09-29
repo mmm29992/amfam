@@ -2,13 +2,13 @@
 const nodemailer = require("nodemailer");
 
 function createTransporter() {
-  // If explicit SMTP host is provided, prefer that (works for Brevo, Mailgun, SendGrid, etc.)
-  const host = process.env.SMTP_HOST; // e.g. "smtp-relay.brevo.com"
-  const port = Number(process.env.SMTP_PORT || 587);
-  const secure = port === 465; // 465 = SSL/TLS, 587/2525 = STARTTLS
+  const host = process.env.SMTP_HOST; // e.g. smtp-relay.brevo.com
+  const port = Number(process.env.SMTP_PORT || 587); // uses SMTP_PORT (NOT PORT)
+  const secure = port === 465; // 465 = SSL/TLS; 587/2525 = STARTTLS
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
+  // Prefer explicit SMTP config (Brevo, Mailgun, etc.)
   if (host && user && pass) {
     return nodemailer.createTransport({
       host,
@@ -18,7 +18,7 @@ function createTransporter() {
     });
   }
 
-  // Fallback: legacy provider switch (kept for convenience)
+  // Optional legacy fallback by provider name
   const provider = (process.env.EMAIL_PROVIDER || "").toLowerCase();
   if (provider === "gmail") {
     return nodemailer.createTransport({

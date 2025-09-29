@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser");
 const http = require("http");
 const { Server } = require("socket.io");
 
-// Reusable mailer (generic SMTP; works with Brevo)
+// Generic SMTP transporter (uses SMTP_HOST/SMTP_PORT/EMAIL_USER/EMAIL_PASS)
 const makeTransporter = require("./utils/emailTransporter");
 
 // Routes
@@ -24,6 +24,7 @@ const PORT = process.env.PORT || 5001;
 
 /* ---------- Middleware ---------- */
 app.set("trust proxy", 1);
+
 const allowedOrigins = ["http://localhost:3000", "https://amfam.vercel.app"];
 const vercelPreviewRegex = /\.vercel\.app$/;
 
@@ -56,7 +57,9 @@ app.use("/api/policies", policiesRoutes);
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err));
+  .catch((err) =>
+    console.error("MongoDB connection error:", err?.message || err)
+  );
 
 /* ---------- Socket.io ---------- */
 const io = new Server(server, {
@@ -66,6 +69,7 @@ const io = new Server(server, {
 const userSocketMap = new Map();
 io.on("connection", (socket) => {
   console.log("⚡️ Socket connected:", socket.id);
+
   socket.on("register", (userId) => userSocketMap.set(userId, socket.id));
   socket.on("joinConversation", (convoId) => socket.join(`convo:${convoId}`));
   socket.on("sendMessage", ({ convoId, message }) => {
@@ -92,6 +96,7 @@ app.post("/internal/run-due", async (req, res) => {
   if (now - __lastRunDueAt < 25_000)
     return res.status(429).json({ ok: false, error: "too_soon" });
   __lastRunDueAt = now;
+
   try {
     const result = await processDueNow();
     res.json({ ok: true, ...result });
