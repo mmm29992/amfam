@@ -5,7 +5,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const http = require("http");
 const { Server } = require("socket.io");
-const nodemailer = require("nodemailer");
+
+// Reusable mailer (generic SMTP; works with Brevo)
+const makeTransporter = require("./utils/emailTransporter");
 
 // Routes
 const authRoutes = require("./routes/auth");
@@ -99,49 +101,6 @@ app.post("/internal/run-due", async (req, res) => {
   }
 });
 
-/* ---------- SMTP quick tests (TEMP) ---------- */
-function makeTransport() {
-  const port = Number(process.env.SMTP_PORT || 587); // 587 STARTTLS, 465 SSL
-  const secure = port === 465;
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port,
-    secure,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    logger: true,
-    debug: true,
-  });
-}
-
-app.get("/_smtp/verify", async (_req, res) => {
-  try {
-    const transporter = makeTransport();
-    await transporter.verify();
-    res.json({ ok: true, msg: "SMTP reachable & creds accepted" });
-  } catch (e) {
-    res
-      .status(500)
-      .json({ ok: false, msg: e?.message || String(e), code: e?.code || null });
-  }
-});
-
-app.get("/_smtp/send", async (_req, res) => {
-  try {
-    const transporter = makeTransport();
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      subject: "SMTP test from Render",
-      text: "If you received this, SMTP works from the server.",
-    });
-    res.json({ ok: true, msg: "Sent" });
-  } catch (e) {
-    res
-      .status(500)
-      .json({ ok: false, msg: e?.message || String(e), code: e?.code || null });
-  }
-});
-
 /* ---------- Fallback/Error handlers (LAST) ---------- */
 app.use((req, res) => res.status(404).json({ message: "Route not found" }));
 app.use((err, req, res, next) => {
@@ -152,4 +111,13 @@ app.use((err, req, res, next) => {
 /* ---------- Start server (ONCE) ---------- */
 server.listen(PORT, () => {
   console.log(`🚀 Server with Socket.io running on port ${PORT}`);
+  // Optional: verify SMTP at boot (non-fatal)
+  try {
+    makeTransporter()
+      .verify()
+      .then(() => console.log("📧 SMTP ready"))
+      .catch((e) => console.warn("⚠️ SMTP verify failed:", e?.message));
+  } catch (e) {
+    console.warn("⚠️ SMTP not configured:", e?.message);
+  }
 });
