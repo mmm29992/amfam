@@ -732,4 +732,26 @@ router.post("/view-password", authenticateToken, async (req, res) => {
   }
 });
 
+// TEMP: ping email (remove after testing)
+router.post("/test-email", async (req, res) => {
+  try {
+    const to = req.body.to || process.env.TEST_EMAIL_TO;
+    if (!to) return res.status(400).json({ message: "Provide 'to' or set TEST_EMAIL_TO" });
+
+    await mailer.sendMail({
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
+      to,
+      subject: "Ping from Brevo transporter",
+      text: "Transporter OK ✅",
+      html: "<p>Transporter OK ✅</p>",
+    });
+
+    res.json({ ok: true, to });
+  } catch (e) {
+    console.error("TEST EMAIL ERROR:", e?.response?.data || e?.message || e);
+    res.status(500).json({ ok: false, error: e?.message || "Failed to send" });
+  }
+});
+
+
 module.exports = router;
