@@ -3,32 +3,37 @@ const axios = require("axios");
 
 let nodemailer = null; // lazy require only if/when we use SMTP
 
-/**
- * Create a mail transporter that exposes a Nodemailer-like { sendMail() } API.
- * Driver is selected via env:
- *   - MAIL_DRIVER=brevo  -> Brevo HTTP API (recommended on Render free tier)
- *   - MAIL_DRIVER=smtp   -> Plain SMTP via Nodemailer
- */
 function createTransporter() {
   const driver = (process.env.MAIL_DRIVER || "brevo").toLowerCase();
 
   if (driver === "brevo") {
     const apiKey = process.env.BREVO_API_KEY;
-    const fromEmail = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER; // fallback
-    const fromName = process.env.EMAIL_FROM_NAME || "Notifications";
+    // 🔧 unify envs; keep safe fallbacks
+    const fromEmail =
+      process.env.MAIL_FROM_EMAIL ||
+      process.env.EMAIL_FROM_ADDRESS ||
+      process.env.EMAIL_USER;
+    const fromName =
+      process.env.MAIL_FROM_NAME ||
+      process.env.EMAIL_FROM_NAME ||
+      "Notifications";
 
     if (!apiKey || !fromEmail) {
       throw new Error(
-        "Brevo not configured. Set BREVO_API_KEY and EMAIL_FROM_ADDRESS (or EMAIL_USER)."
+        "Brevo not configured. Set BREVO_API_KEY and MAIL_FROM_EMAIL (or EMAIL_USER)."
       );
     }
 
-    // Minimal Nodemailer-like wrapper
     return {
+      // keep compatibility with code that calls verify()
+      async verify() {
+        return true; // Brevo HTTP doesn't need a handshake
+      },
+
       /**
-       * sendMail({ from, to, cc, bcc, subject, text, html, attachments })
+       * sendMail({ from, to, cc, bcc, subject, text, html, replyTo, attachments })
        */
-      async sendMail(opts) {
+      async sendMail(opts = {}) {
         const {
           from,
           to,
@@ -37,57 +42,72 @@ function createTransporter() {
           subject,
           text,
           html,
-          attachments, // optional: [{ filename, content(base64 or string), path }]
-        } = opts || {};
+          replyTo,
+          attachments, // [{ filename, content(base64 or string) }]
+        } = opts;
 
-        // Normalize recipients to Brevo's expected shape
         const toList = normAddresses(to);
+        if (!toList.length) throw new Error("sendMail: 'to' is required.");
+
         const ccList = normAddresses(cc);
         const bccList = normAddresses(bcc);
 
-        // Sender: allow overriding, otherwise use env defaults
-        const sender = parseAddress(from) || {
-          email: fromEmail,
-          name: fromName,
-        };
-
-        // Map basic attachments to Brevo (base64 recommended)
+        const sender = parseFrom(from) || { email: fromEmail, name: fromName };
         const brevoAttachments = Array.isArray(attachments)
-          ? attachments.map((a) => mapAttachment(a)).filter(Boolean)
+          ? attachments.map(mapAttachment).filter(Boolean)
           : undefined;
 
         const payload = {
-          sender,
-          to: toList,
+          sender, // { email, name }
+          to: toList, // [{ email, name? }]
           cc: ccList?.length ? ccList : undefined,
           bcc: bccList?.length ? bccList : undefined,
           subject,
           textContent: text || undefined,
           htmlContent: html || undefined,
-          attachment: brevoAttachments,
+          replyTo: parseAddress(replyTo) || undefined, // { email, name? }
+          attachment: brevoAttachments, // [{ name, content(base64) }]
         };
 
-        const res = await axios.post(
-          "https://api.brevo.com/v3/smtp/email",
-          payload,
-          {
-            headers: {
-              "api-key": apiKey,
-              "Content-Type": "application/json",
-            },
-            timeout: 15000,
-          }
-        );
+        try {
+          const res = await axios.post(
+            "https://api.brevo.com/v3/smtp/email",
+            payload,
+            {
+              headers: {
+                "api-key": apiKey,
+                "Content-Type": "application/json",
+              },
+              timeout: 15000,
+            }
+          );
 
-        // Mimic Nodemailer-ish response
-        return {
-          messageId: res.data?.messageId || res.data?.messageId?.[0] || "brevo",
-        };
+          return {
+            messageId:
+              res.data?.messageId || res.data?.messageIds?.[0] || "brevo",
+            response: "OK",
+          };
+        } catch (err) {
+          // Surface useful details
+          const status = err?.response?.status;
+          const data = err?.response?.data;
+          const msg =
+            data?.message ||
+            data?.errors?.[0]?.message ||
+            err?.message ||
+            String(err);
+          const short = typeof msg === "string" ? msg.slice(0, 300) : "Error";
+          throw new Error(
+            `Brevo sendMail failed${
+              status ? ` (HTTP ${status})` : ""
+            }: ${short}`
+          );
+        }
       },
     };
   }
 
-  // === SMTP fallback (uses Nodemailer) ===
+  // === SMTP fallback via Nodemailer ===
   if (!nodemailer) nodemailer = require("nodemailer");
 
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
@@ -102,12 +122,14 @@ function createTransporter() {
     );
   }
 
-  return nodemailer.createTransport({
+  const transport = nodemailer.createTransport({
     host,
     port,
     secure,
     auth: { user, pass },
   });
+
+  return transport;
 }
 
 /* ---------- helpers ---------- */
@@ -115,14 +137,16 @@ function createTransporter() {
 function normAddresses(val) {
   if (!val) return [];
   if (Array.isArray(val)) return val.flatMap(normAddresses);
-  if (typeof val === "string")
+  if (typeof val === "string") {
+    // support "Name <email@x.com>, other@x.com"
     return val
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean)
-      .map((email) => ({ email }));
+      .map(parseMailboxString)
+      .filter(Boolean);
+  }
   if (val && typeof val === "object") {
-    // nodemailer style: { address, name } or { email, name }
     const parsed = parseAddress(val);
     return parsed ? [parsed] : [];
   }
@@ -131,27 +155,46 @@ function normAddresses(val) {
 
 function parseAddress(v) {
   if (!v) return null;
-  if (typeof v === "string") return { email: v };
-  // nodemailer formats
+  if (typeof v === "string") return parseMailboxString(v);
   const email = v.address || v.email;
   const name = v.name;
   if (!email) return null;
   return name ? { email, name } : { email };
 }
 
+function parseMailboxString(s) {
+  const m = s.match(/^\s*(?:"?([^"]*)"?\s*)?<([^>]+)>\s*$/); // "Name" <email>
+  if (m) {
+    const name = m[1]?.trim();
+    const email = m[2]?.trim();
+    return email ? (name ? { email, name } : { email }) : null;
+  }
+  return { email: s };
+}
+
+function parseFrom(from) {
+  if (!from) return null;
+  const a = parseAddress(from);
+  return a ? a : null;
+}
+
 function mapAttachment(a) {
   if (!a) return null;
-  // Brevo expects { name, content } where content is base64
-  // If caller already passed base64 in content, use it; otherwise try to convert string to base64.
+  const name = a.filename || a.name || "attachment";
   if (a.content) {
-    const isBase64 =
-      /^[A-Za-z0-9+/=]+$/.test(a.content) && a.content.length % 4 === 0;
-    const base64 = isBase64
-      ? a.content
-      : Buffer.from(a.content).toString("base64");
-    return { name: a.filename || a.name || "attachment", content: base64 };
+    let base64;
+    try {
+      // if it's already base64, this will still work for most cases; otherwise convert
+      const looksBase64 = /^[A-Za-z0-9+/=\r\n]+$/.test(a.content);
+      base64 = looksBase64
+        ? a.content
+        : Buffer.from(a.content).toString("base64");
+    } catch {
+      base64 = Buffer.from(String(a.content)).toString("base64");
+    }
+    return { name, content: base64 };
   }
-  // If a.path was provided, you could read it here — omitted to avoid fs in serverless.
+  // (Optional) Support a.path by reading file — skipped to avoid fs in serverless.
   return null;
 }
 
