@@ -3,22 +3,16 @@ const createTransporter = require("../utils/emailTransporter");
 const Reminder = require("../models/Reminder");
 require("dotenv").config();
 
-const transporter =
-  typeof createTransporter === "function"
-    ? createTransporter(
-        (process.env.EMAIL_PROVIDER || "gmail").toLowerCase(),
-        process.env.EMAIL_USER,
-        process.env.EMAIL_PASS
-      )
-    : createTransporter;
+// Use our env-driven transporter (Brevo/API or SMTP under the hood)
+const transporter = createTransporter();
 
-// optional: prove SMTP is ready
+// Optional: prove mailer is ready (no-op for API driver)
 (async () => {
   try {
-    await transporter.verify();
-    console.log("📮 SMTP ready");
+    await transporter.verify?.(); // safe-optional
+    console.log("📮 Mailer ready");
   } catch (e) {
-    console.error("SMTP verify failed:", e?.message || e);
+    console.error("Mailer verify failed:", e?.message || e);
   }
 })();
 
@@ -27,7 +21,6 @@ cron.schedule("* * * * *", async () => {
     const now = new Date();
     console.log("⏰ Cron tick:", now.toISOString());
 
-    // only reminders we intend to email + are due + not deleted + not sent
     const dueReminders = await Reminder.find({
       deleted: false,
       sendEmail: true,
@@ -51,20 +44,20 @@ cron.schedule("* * * * *", async () => {
         }
 
         await transporter.sendMail({
-          from: process.env.EMAIL_USER,
+          from: {
+            email: process.env.EMAIL_FROM_ADDRESS,
+            name: process.env.EMAIL_FROM_NAME || "American Family Insurance",
+          },
           to: r.targetEmail,
           subject: r.emailSubject || `Reminder: ${r.title}`,
           text: r.emailBody || r.message || "",
+          // html: r.emailHtml || undefined,
         });
 
         await Reminder.updateOne(
           { _id: r._id },
           {
-            $set: {
-              sent: true,
-              sentAt: new Date(),
-              emailStatus: "sent",
-            },
+            $set: { sent: true, sentAt: new Date(), emailStatus: "sent" },
             $unset: { lastError: "" },
           }
         );
@@ -76,7 +69,6 @@ cron.schedule("* * * * *", async () => {
           r._id.toString(),
           emailErr?.message || emailErr
         );
-        // keep sent=false so it retries next tick
         await Reminder.updateOne(
           { _id: r._id },
           {

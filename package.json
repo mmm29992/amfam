@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^3.0.1",
     "@tailwindcss/postcss": "^4.1.10",
     "@tailwindcss/vite": "^4.1.10",
     "axios": "^1.10.0",

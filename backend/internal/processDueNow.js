@@ -2,19 +2,12 @@
 const Reminder = require("../models/Reminder");
 const createTransporter = require("../utils/emailTransporter");
 
-const transporter =
-  typeof createTransporter === "function"
-    ? createTransporter(
-        (process.env.EMAIL_PROVIDER || "gmail").toLowerCase(),
-        process.env.EMAIL_USER,
-        process.env.EMAIL_PASS
-      )
-    : createTransporter; // if your module already exports an instance
+// New: helper reads env (MAIL_DRIVER/BREVO_API_KEY/EMAIL_FROM_*)
+const transporter = createTransporter();
 
 async function processDueNow() {
   const now = new Date();
 
-  // Only grab reminders we should email and that are due
   const due = await Reminder.find({
     deleted: false,
     sendEmail: true,
@@ -42,10 +35,15 @@ async function processDueNow() {
 
     try {
       await transporter.sendMail({
-        from: process.env.EMAIL_USER, // real sender
+        from: {
+          email: process.env.EMAIL_FROM_ADDRESS,
+          name: process.env.EMAIL_FROM_NAME || "American Family Insurance",
+        },
         to: r.targetEmail,
         subject: r.emailSubject || `Reminder: ${r.title}`,
         text: r.emailBody || r.message || "",
+        // html: optional richer body if you store it on the reminder:
+        // html: r.emailHtml || undefined,
       });
 
       await Reminder.updateOne(
