@@ -7,14 +7,16 @@ function createTransporter() {
   const driver = (process.env.MAIL_DRIVER || "brevo").toLowerCase();
 
   if (driver === "brevo") {
-    const apiKey = process.env.BREVO_API_KEY;
+    const apiKey = (process.env.BREVO_API_KEY || "").trim();
     // 🔧 unify envs; keep safe fallbacks
     const fromEmail =
       process.env.MAIL_FROM_EMAIL ||
+      process.env.BREVO_FROM_EMAIL ||
       process.env.EMAIL_FROM_ADDRESS ||
-      process.env.EMAIL_USER;
+      process.env.EMAIL_USER; // last resort, but not ideal for HTTP API
     const fromName =
       process.env.MAIL_FROM_NAME ||
+      process.env.BREVO_FROM_NAME ||
       process.env.EMAIL_FROM_NAME ||
       "Notifications";
 
@@ -23,6 +25,21 @@ function createTransporter() {
         "Brevo not configured. Set BREVO_API_KEY and MAIL_FROM_EMAIL (or EMAIL_USER)."
       );
     }
+    console.log(
+      "MAIL_DRIVER:",
+      (process.env.MAIL_DRIVER || "brevo").toLowerCase()
+    );
+    console.log(
+      "Has BREVO_API_KEY:",
+      !!(process.env.BREVO_API_KEY || "").trim()
+    );
+    console.log(
+      "Resolved FROM:",
+      process.env.MAIL_FROM_EMAIL ||
+        process.env.BREVO_FROM_EMAIL ||
+        process.env.EMAIL_FROM_ADDRESS ||
+        process.env.EMAIL_USER
+    );
 
     return {
       // keep compatibility with code that calls verify()
