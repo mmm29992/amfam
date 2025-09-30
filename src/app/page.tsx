@@ -3,6 +3,8 @@ import LogoutHeader from "./components/Header/LogoutHeader";
 import { JSX } from "react";
 
 export default function Home(): JSX.Element {
+  const goSignin = () => document.getElementById("signin-trigger")?.click();
+
   return (
     <div className="bg-white min-h-screen scroll-smooth text-gray-900">
       {/* Header */}
@@ -96,12 +98,12 @@ export default function Home(): JSX.Element {
               <ul className="text-gray-700/90 space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="mt-1 h-2 w-2 rounded-full bg-blue-600" />
-                  Auto • Home • Renters • Life /
+                  Auto • Home • Renters • Life /{" "}
                   <span className="ml-1">Auto • Casa • Inquilinos • Vida</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1 h-2 w-2 rounded-full bg-blue-600" />
-                  Fast quotes and clear guidance /
+                  Fast quotes and clear guidance /{" "}
                   <span className="ml-1">
                     Cotizaciones rápidas y asesoría clara
                   </span>
@@ -109,17 +111,17 @@ export default function Home(): JSX.Element {
               </ul>
 
               <div className="pt-2 flex flex-wrap gap-3">
-                <a
-                  href="#contact"
+                <button
+                  onClick={goSignin}
                   className="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow hover:bg-blue-800"
+                  aria-label="Request a Quote / Solicita una cotización"
                 >
                   Request a Quote / Solicita una cotización
-                </a>
+                </button>
                 <button
-                  onClick={() =>
-                    document.getElementById("signin-trigger")?.click()
-                  }
+                  onClick={goSignin}
                   className="inline-flex items-center justify-center rounded-lg border border-blue-700 px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50"
+                  aria-label="Sign in / Iniciar sesión"
                 >
                   Sign in / Iniciar sesión
                 </button>
@@ -235,17 +237,17 @@ export default function Home(): JSX.Element {
               </div>
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <a
-                  href="#contact"
+                <button
+                  onClick={goSignin}
                   className="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow hover:bg-blue-800"
+                  aria-label="Get a Free Quote / Obtén una cotización"
                 >
                   Get a Free Quote / Obtén una cotización
-                </a>
+                </button>
                 <button
-                  onClick={() =>
-                    document.getElementById("signin-trigger")?.click()
-                  }
+                  onClick={goSignin}
                   className="inline-flex items-center justify-center rounded-lg border border-blue-700 px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50"
+                  aria-label="Client Login / Acceso de clientes"
                 >
                   Client Login / Acceso de clientes
                 </button>
@@ -319,18 +321,19 @@ export default function Home(): JSX.Element {
           </p>
           <div className="mt-8 flex items-center justify-center gap-4">
             <button
-              onClick={() => document.getElementById("signin-trigger")?.click()}
+              onClick={goSignin}
               className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
               aria-label="Sign in / Iniciar sesión"
             >
               Sign in / Iniciar sesión
             </button>
-            <a
-              href="#contact"
+            <button
+              onClick={goSignin}
               className="inline-flex items-center justify-center rounded-lg border border-white/70 px-6 py-3 font-semibold text-white hover:bg-white/10"
+              aria-label="Request a Quote / Solicita una cotización"
             >
               Request a Quote / Solicita una cotización
-            </a>
+            </button>
           </div>
         </div>
       </section>
