@@ -17,7 +17,7 @@ export default function Home(): JSX.Element {
         </div>
       </div>
 
-      {/* SECTION 1 — Families (single image) */}
+      {/* 1) Families — single image */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <header className="text-center mb-10">
@@ -32,7 +32,7 @@ export default function Home(): JSX.Element {
 
           <figure className="rounded-xl shadow-lg overflow-hidden bg-gray-100 max-w-5xl mx-auto">
             <img
-              src="/familypark.JPG" // ⬅️ only the far-left pic
+              src="/familypark.JPG"
               alt="Family at the park with dog"
               loading="lazy"
               className="h-[360px] md:h-[420px] w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
@@ -41,15 +41,14 @@ export default function Home(): JSX.Element {
         </div>
       </section>
 
-      {/* SECTION DIVIDER */}
       <hr className="border-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent my-2" />
 
-      {/* SECTION 3 — Mauricia banner */}
+      {/* 2) Mauricia banner — uses inglesoespanol.png */}
       <section className="relative w-full">
         <div className="relative h-[70vh] md:h-[80vh]">
           <img
-            src="/SoyAgentDeSegurosDraft3.png"
-            alt="Mauricia Engle agency banner"
+            src="/inglesoespanol.png"
+            alt="Inglés / Español banner — Mauricia Engle"
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
           />
@@ -67,13 +66,13 @@ export default function Home(): JSX.Element {
         </div>
       </section>
 
-      {/* SECTION 4 — About Mauricia */}
+      {/* 3) Meet Mauricia — uses meetmauricia.png */}
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <figure className="rounded-2xl shadow-lg overflow-hidden">
             <img
-              src="/mauriciainchair.jpg"
-              alt="Mauricia sitting in chair"
+              src="/meetmauricia.png"
+              alt="Meet Mauricia — portrait"
               loading="lazy"
               className="w-full h-[480px] object-cover"
             />
@@ -92,7 +91,7 @@ export default function Home(): JSX.Element {
         </div>
       </section>
 
-      {/* SECTION 5 — Promo / collage */}
+      {/* 4) Why Clients Choose Us — uses lastmauri.png */}
       <section className="py-16 bg-gray-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <h2 className="text-center text-3xl md:text-4xl font-semibold text-blue-800">
@@ -100,8 +99,8 @@ export default function Home(): JSX.Element {
           </h2>
           <div className="mt-10 rounded-2xl shadow-lg overflow-hidden bg-white">
             <img
-              src="/mauriciacarousel.png"
-              alt="Reasons clients choose our agency"
+              src="/lastmauri.png"
+              alt="Why clients choose our agency"
               loading="lazy"
               className="w-full h-auto"
             />
@@ -109,38 +108,7 @@ export default function Home(): JSX.Element {
         </div>
       </section>
 
-      {/* SECTION 6 — Final CTA */}
-      <section className="py-20 bg-blue-900 text-white">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-semibold">
-            ¿Necesitas una cotización?
-          </h2>
-          <p className="mt-4 text-lg text-blue-100">
-            Hablamos Español e Inglés. Contáctanos hoy para ayudarte con
-            cotizaciones y cobertura personalizada.
-          </p>
-          <div className="mt-8 flex items-center justify-center gap-4">
-            <button
-              onClick={() => {
-                const el = document.getElementById("signin-trigger");
-                if (el) el.click();
-              }}
-              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
-              aria-label="Sign in to request a quote"
-            >
-              Sign in
-            </button>
-            <a
-              href="#contact"
-              className="inline-flex items-center justify-center rounded-lg border border-white/70 px-6 py-3 font-semibold text-white hover:bg-white/10"
-            >
-              Request a Quote
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 7 — Cars (moved to the very end) */}
+      {/* 5) Cars — moved ABOVE the CTA */}
       <section className="py-16 bg-blue-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <header className="text-center mb-10">
@@ -172,6 +140,37 @@ export default function Home(): JSX.Element {
                 />
               </figure>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6) Final CTA */}
+      <section className="py-20 bg-blue-900 text-white">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
+          <h2 className="text-3xl md:text-4xl font-semibold">
+            ¿Necesitas una cotización?
+          </h2>
+          <p className="mt-4 text-lg text-blue-100">
+            Hablamos Español e Inglés. Contáctanos hoy para ayudarte con
+            cotizaciones y cobertura personalizada.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <button
+              onClick={() => {
+                const el = document.getElementById("signin-trigger");
+                if (el) el.click();
+              }}
+              className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
+              aria-label="Sign in to request a quote"
+            >
+              Sign in
+            </button>
+            <a
+              href="#contact"
+              className="inline-flex items-center justify-center rounded-lg border border-white/70 px-6 py-3 font-semibold text-white hover:bg-white/10"
+            >
+              Request a Quote
+            </a>
           </div>
         </div>
       </section>
