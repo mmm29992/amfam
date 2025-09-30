@@ -13,7 +13,7 @@ export default function Home(): JSX.Element {
       {/* Announcement bar */}
       <div className="w-full bg-blue-50 border-y border-blue-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 text-center text-sm text-blue-800">
-          Hablamos Español • We speak English
+          Thie is sthe new homepage{" "}
         </div>
       </div>
 
