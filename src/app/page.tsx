@@ -9,14 +9,12 @@ export default function Home(): JSX.Element {
       <div className="bg-white">
         <LogoutHeader />
       </div>
-
       {/* Announcement bar */}
       <div className="w-full bg-blue-50 border-y border-blue-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-2 text-center text-sm text-blue-800">
           Hablamos Español • We speak English
         </div>
       </div>
-
       {/* 1) Families — single image */}
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -40,41 +38,37 @@ export default function Home(): JSX.Element {
           </figure>
         </div>
       </section>
-
       <hr className="border-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent my-2" />
-
-      {/* 2) Mauricia banner — uses inglesoespanol.png */}
-      <section className="relative w-full">
-        <div className="relative h-[70vh] md:h-[80vh]">
-          <img
-            src="/inglesoespanol.png"
-            alt="Inglés / Español banner — Mauricia Engle"
-            className="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/25 to-transparent" />
-          <div className="relative z-10 h-full flex items-center justify-center px-4 text-center">
-            <div className="text-white drop-shadow">
-              <h1 className="text-4xl md:text-5xl font-bold">
-                Mauricia Engle Agency
-              </h1>
-              <p className="mt-3 text-lg md:text-xl">
-                Your local insurance expert — Aquí para ayudarte.
-              </p>
-            </div>
+      /* 2) Mauricia banner — uses inglesoespanol.png */
+      <section className="py-12 bg-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="rounded-2xl shadow-lg bg-gray-100/60 p-3">
+            <img
+              src="/inglesoespanol.png"
+              alt="Inglés / Español banner — Mauricia Engle"
+              loading="lazy"
+              className="w-full h-auto object-contain rounded-xl"
+            />
+          </div>
+          <div className="text-center mt-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-900">
+              Mauricia Engle Agency
+            </h1>
+            <p className="mt-2 text-lg md:text-xl text-gray-700">
+              Your local insurance expert — Aquí para ayudarte.
+            </p>
           </div>
         </div>
       </section>
-
-      {/* 3) Meet Mauricia — uses meetmauricia.png */}
+      /* 3) Meet Mauricia — uses meetmauricia.png */
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-          <figure className="rounded-2xl shadow-lg overflow-hidden">
+          <figure className="rounded-2xl shadow-lg overflow-hidden bg-gray-100/60 p-3">
             <img
               src="/meetmauricia.png"
               alt="Meet Mauricia — portrait"
               loading="lazy"
-              className="w-full h-[480px] object-cover"
+              className="w-full h-auto max-h-[520px] object-contain rounded-xl"
             />
           </figure>
           <div>
@@ -90,24 +84,22 @@ export default function Home(): JSX.Element {
           </div>
         </div>
       </section>
-
-      {/* 4) Why Clients Choose Us — uses lastmauri.png */}
+      /* 4) Why Clients Choose Us — uses lastmauri.png */
       <section className="py-16 bg-gray-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-center text-3xl md:text-4xl font-semibold text-blue-800">
             Why Clients Choose Us
           </h2>
-          <div className="mt-10 rounded-2xl shadow-lg overflow-hidden bg-white">
+          <div className="mt-10 mx-auto rounded-2xl shadow-lg overflow-hidden bg-white p-3">
             <img
               src="/lastmauri.png"
               alt="Why clients choose our agency"
               loading="lazy"
-              className="w-full h-auto"
+              className="w-full h-auto object-contain rounded-xl"
             />
           </div>
         </div>
       </section>
-
       {/* 5) Cars — moved ABOVE the CTA */}
       <section className="py-16 bg-blue-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -143,7 +135,6 @@ export default function Home(): JSX.Element {
           </div>
         </div>
       </section>
-
       {/* 6) Final CTA */}
       <section className="py-20 bg-blue-900 text-white">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
