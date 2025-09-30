@@ -39,32 +39,77 @@ export default function Home(): JSX.Element {
         </div>
       </section>
       <hr className="border-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent my-2" />
-      {/*
-  2) Mauricia banner — uses inglesoespanol.png
-*/}{" "}
-      <section className="py-12 bg-white">
+      {/* 2) Agency hero — card layout (no banner) */}
+      <section className="py-14 bg-gradient-to-b from-white to-blue-50/40">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="rounded-2xl shadow-lg bg-gray-100/60 p-3">
-            <img
-              src="/inglesoespanol.png"
-              alt="Inglés / Español banner — Mauricia Engle"
-              loading="lazy"
-              className="w-full h-auto object-contain rounded-xl"
-            />
-          </div>
-          <div className="text-center mt-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-blue-900">
-              Mauricia Engle Agency
-            </h1>
-            <p className="mt-2 text-lg md:text-xl text-gray-700">
-              Your local insurance expert — Aquí para ayudarte.
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center rounded-2xl bg-white shadow-xl ring-1 ring-black/5 p-5 md:p-7">
+            {/* Photo — contained, not cropped */}
+            <figure className="rounded-xl bg-gray-50 p-3 md:p-4">
+              <img
+                src="/inglesoespanol.png"
+                alt="Mauricia Engle — bilingual (Inglés / Español)"
+                className="w-full h-auto object-contain rounded-lg"
+                loading="lazy"
+              />
+            </figure>
+
+            {/* Copy + CTAs */}
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+                  <path
+                    fill="currentColor"
+                    d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm0 18a8 8 0 0 1-7.75-6h6.25v6h1.5v-6h6.25A8 8 0 0 1 12 20Zm7.75-7h-6.25V7h-1.5v6H4.25a8 8 0 0 1 0-2H12V5h1.5v6h6.25a8 8 0 0 1 0 2Z"
+                  />
+                </svg>
+                Inglés / Español
+              </span>
+
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-blue-900">
+                Mauricia Engle Agency
+              </h1>
+
+              <p className="text-lg text-gray-700">
+                Your local insurance expert —{" "}
+                <span className="whitespace-nowrap">Aquí para ayudarte.</span>
+                We protect what matters most with personalized coverage and
+                friendly, bilingual service.
+              </p>
+
+              <ul className="text-gray-700/90 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-blue-600"></span>
+                  Auto • Home • Renters • Life
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-blue-600"></span>
+                  Fast quotes and clear guidance
+                </li>
+              </ul>
+
+              <div className="pt-2 flex flex-wrap gap-3">
+                <a
+                  href="#contact"
+                  className="inline-flex items-center justify-center rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white shadow hover:bg-blue-800"
+                >
+                  Request a Quote
+                </a>
+                <button
+                  onClick={() =>
+                    document.getElementById("signin-trigger")?.click()
+                  }
+                  className="inline-flex items-center justify-center rounded-lg border border-blue-700 px-5 py-3 font-semibold text-blue-700 hover:bg-blue-50"
+                >
+                  Sign in
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
       {/*
   3) Meet Mauricia — uses meetmauricia.png
-*/}{" "}
+*/}
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <figure className="rounded-2xl shadow-lg overflow-hidden bg-gray-100/60 p-3">
