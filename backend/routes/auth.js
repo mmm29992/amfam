@@ -9,20 +9,19 @@ const VerificationCode = require("../models/VerificationCode");
 const crypto = require("crypto");
 const router = express.Router();
 
-const createTransporter = require("../utils/emailTransporter"); // factory
-const mailer = createTransporter(
-  (process.env.EMAIL_PROVIDER || "gmail").toLowerCase(),
-  process.env.EMAIL_USER,
-  process.env.EMAIL_PASS
-);
+const createTransporter = require("../utils/emailTransporter");
+const mailer = createTransporter();
+
+const FROM_NAME = process.env.MAIL_FROM_NAME || "Support";
+const FROM_EMAIL = process.env.MAIL_FROM_EMAIL || process.env.EMAIL_USER; // fallback
 
 // Optional: see SMTP status in Render logs at boot
-mailer
-  .verify()
-  .then(() =>
-    console.log("📧 SMTP ready:", process.env.EMAIL_PROVIDER || "gmail")
-  )
-  .catch((e) => console.error("❌ SMTP verify failed:", e?.message || e));
+if (process.env.NODE_ENV !== "production") {
+  mailer
+    .verify()
+    .then(() => console.log("📧 SMTP ready"))
+    .catch((e) => console.warn("❌ SMTP verify failed:", e?.message || e));
+}
 
 router.post("/request-password-reset", async (req, res) => {
   const { email } = req.body;
@@ -59,10 +58,18 @@ If you didn’t request this reset, please contact us immediately.
     `;
 
     await mailer.sendMail({
-      from: `"Support" <${process.env.EMAIL_USER}>`,
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: email,
       subject: "Your Temporary Password",
       text: message,
+      html: `
+   <p>Hi ${user.firstName || user.username},</p>
+   <p>We’ve generated a temporary password for your account:</p>
+   <p><strong>${tempPassword}</strong></p>
+   <p>You can now log in using this password and change it from your profile settings.</p>
+   <p>If you didn’t request this reset, please contact us immediately.</p>
+   <p>– The Support Team</p>
+ `,
     });
 
     console.log(`✅ Temp password sent to: ${email}`);
@@ -113,7 +120,7 @@ router.post("/register", async (req, res) => {
     userType,
     employeeCode,
   } = req.body;
-  console.log("🚨 Register endpoint hit:", req.body);
+  console.log("🚨 Register endpoint hit:", { email, username, userType });
 
   try {
     if (
@@ -515,26 +522,18 @@ router.post("/start-registration", async (req, res) => {
         .status(403)
         .json({ message: "Invalid or expired employee code." });
     }
-    if (!latestCode || employeeAccessCode.trim() !== latestCode.code.trim()) {
-      console.warn(
-        `❌ Invalid employee access code entered: ${employeeAccessCode}`
-      );
-      return res
-        .status(403)
-        .json({ message: "Invalid or expired employee code." });
-    }
   }
 
   const existingCode = await VerificationCode.findOne({ email });
   const now = new Date();
-
-  // ⏱️ Cooldown: 60 seconds between code requests
-  if (existingCode && existingCode.expiresAt > now) {
-    const secondsRemaining = Math.ceil((existingCode.expiresAt - now) / 1000);
-    if (secondsRemaining > 540) {
-      // less than 60 seconds since last request
+  // ⏱️ Cooldown: 60 seconds between requests (uses updatedAt if present)
+  if (existingCode?.updatedAt) {
+    const since = now - new Date(existingCode.updatedAt);
+    const cooldownMs = 60 * 1000;
+    if (since < cooldownMs) {
+      const wait = Math.ceil((cooldownMs - since) / 1000);
       return res.status(429).json({
-        message: "Please wait a moment before requesting a new code.",
+        message: `Please wait ${wait}s before requesting a new code.`,
       });
     }
   }
@@ -550,7 +549,7 @@ router.post("/start-registration", async (req, res) => {
 
   try {
     await mailer.sendMail({
-      from: `"Verify your account" <${process.env.EMAIL_USER}>`,
+      from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
       to: email,
       subject: "Your Verification Code",
       text: `Your verification code is: ${code}`,
@@ -585,7 +584,8 @@ router.post("/verify-email-code", async (req, res) => {
   } = req.body;
 
   const existing = await VerificationCode.findOne({ email });
-  if (!existing || existing.code !== code) {
+  const now = new Date();
+  if (!existing || existing.code !== code || existing.expiresAt < now) {
     console.warn(`❌ Invalid verification attempt for email: ${email}`);
     return res
       .status(400)
@@ -641,7 +641,6 @@ router.post("/verify-email-code", async (req, res) => {
 
 router.post("/validate-employee-code", async (req, res) => {
   const { code } = req.body;
-
   if (!code) {
     return res.status(400).json({ message: "Access code is required." });
   }
@@ -712,7 +711,10 @@ router.delete("/users/:id", authenticateToken, async (req, res) => {
   res.status(200).json({ message: "User deleted successfully." });
 });
 
-router.post("/view-password", async (req, res) => {
+router.post("/view-password", authenticateToken, async (req, res) => {
+  if (req.user.userType !== "owner") {
+    return res.status(403).json({ message: "Unauthorized" });
+  }
   const { userId, ownerCode } = req.body;
 
   try {
@@ -721,13 +723,10 @@ router.post("/view-password", async (req, res) => {
       return res.status(403).json({ message: "Invalid owner code." });
     }
 
-    const user = await User.findById(userId);
-    if (!user || !user.password) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Return password ONLY for owners
-    res.json({ password: user.password });
+    // Do NOT return hashes. Provide a safe action instead:
+    // For example, trigger a reset email to the user:
+    // await sendResetEmail(userId);
+    return res.status(200).json({ message: "Action acknowledged." });
   } catch (err) {
     res.status(500).json({ message: "Server error." });
   }
