@@ -39,7 +39,9 @@ export default function Home(): JSX.Element {
         </div>
       </section>
       <hr className="border-0 h-px bg-gradient-to-r from-transparent via-blue-200 to-transparent my-2" />
-      /* 2) Mauricia banner — uses inglesoespanol.png */
+      {/*
+  2) Mauricia banner — uses inglesoespanol.png
+*/}{" "}
       <section className="py-12 bg-white">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="rounded-2xl shadow-lg bg-gray-100/60 p-3">
@@ -60,7 +62,9 @@ export default function Home(): JSX.Element {
           </div>
         </div>
       </section>
-      /* 3) Meet Mauricia — uses meetmauricia.png */
+      {/*
+  3) Meet Mauricia — uses meetmauricia.png
+*/}{" "}
       <section className="py-16 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
           <figure className="rounded-2xl shadow-lg overflow-hidden bg-gray-100/60 p-3">
@@ -84,7 +88,9 @@ export default function Home(): JSX.Element {
           </div>
         </div>
       </section>
-      /* 4) Why Clients Choose Us — uses lastmauri.png */
+      {/*
+  4) Why Clients Choose Us — uses lastmauri.png
+*/}{" "}
       <section className="py-16 bg-gray-50">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-center text-3xl md:text-4xl font-semibold text-blue-800">
